@@ -48,13 +48,10 @@ tasks.withType(Test) {
 }
 
 tasks.register("smokeTest", Test) {
-    group = "verification"
-    description = "Запускает только тесты с тегом @Tag('smoke')"
     useJUnitPlatform { includeTags "smoke" }
 }
 
 tasks.register("regressionTest", Test) {
-    group = "verification"
-    description = "Запускает только тесты с тегом @Tag('regression')"
     useJUnitPlatform { includeTags "regression" }
 }
+

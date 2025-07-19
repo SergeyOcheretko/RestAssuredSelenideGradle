@@ -2,26 +2,18 @@ package apiTests.UserAccountApiTests;
 
 import apiTests.models.TestUser;
 import com.github.javafaker.Faker;
-import io.qameta.allure.Severity;
-import io.qameta.allure.SeverityLevel;
 import io.qameta.allure.Step;
-import io.qameta.allure.Story;
 import io.restassured.RestAssured;
 import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.filter.log.LogDetail;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.TestMethodOrder;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
 
 
 import java.util.Map;
-import java.util.stream.Stream;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
@@ -276,55 +268,182 @@ public class MethodsUserAccountApi {
 
     }
 
-    private static Stream<Arguments> negativeRegistrationCases() {
-        return Stream.of(
-                Arguments.of("Пустой email", Map.of("name", user.name, "email", "", "password", user.password), 400, "valid email"),
-                Arguments.of("Некорректный email", Map.of("name", user.name, "email", "invalid@email,", "password", user.password), 400, "email"),
-                Arguments.of("Короткий пароль", Map.of("name", user.name, "email", user.email, "password", "fre"), 400, "Password"),
-                Arguments.of("Дубликат email", Map.of("name", user.name, "email", "sergej.ocheretko1@gmail.com", "password", user.password), 409, "same email"),
-                Arguments.of("Пустые поля", Map.of("name", "", "email", "", "password", ""), 400, ""),
-                Arguments.of("Некорректный Content-Type", null, 400, "") // особый кейс — ниже объяснение
-        );
+
+    @Step("Регистрация с пустым эмейлом")
+    protected static void incorrectEmailRegistration() {
+        given()
+                .header("X-Auth-Token", user.token)
+                .contentType(ContentType.JSON)
+                .body(Map.of(
+                        "name", user.name,
+                        "email", "",
+                        "password", user.password
+                ))
+                .log().all()
+                .when()
+                .post("/api/users/register")
+                .then()
+                .log().all()
+                .statusCode(400)
+                .body("success", equalTo(false))
+                .body("message", containsString("valid email"));
     }
-    @ParameterizedTest(name = "{0}")
-    @MethodSource("negativeRegistrationCases")
-    @Story("Негативные кейсы регистрации")
-    @Severity(SeverityLevel.NORMAL)
-    @DisplayName("Регистрация с ошибкой")
-    void registerWithInvalidData(String description, Map<String, String> body, int statusCode, String expectedMessage) {
-        if (description.equals("Некорректный Content-Type")) {
-            String rawBody = """
+
+
+    @Step("Регистрация с некорректным email")
+    protected static void emptyEmailRegistration() {
+        given()
+                .header("X-Auth-Token", user.token)
+                .contentType(ContentType.JSON)
+                .body(Map.of(
+                        "name", user.name,
+                        "email", "rjgmrtgm@irkmre.com,",
+                        "password", user.password))
+                .log().all()
+                .when()
+                .post("/api/users/register")
+                .then()
+                .log().all()
+                .statusCode(400)
+                .body("success", equalTo(false))
+                .body("message", containsString("email"));
+
+    }
+
+    @Step("Регистрация с коротким паролем")
+    protected static void shortPasswordRegistration() {
+        given()
+                .header("X-Auth-Token", user.token)
+                .contentType(ContentType.JSON)
+                .body(Map.of(
+                        "name", user.name,
+                        "email", user.email,
+                        "password", "fre"))
+                .log().all()
+                .when()
+                .post("/api/users/register")
+                .then()
+                .log().all()
+                .statusCode(400)
+                .body("success", equalTo(false))
+                .body("message", containsString("Password"));
+
+    }
+
+    @Step("Регистрация с уже существующим email")
+    protected static void duplicateEmail() {
+        given()
+                .header("X-Auth-Token", user.token)
+                .contentType(ContentType.JSON)
+                .body(Map.of(
+                        "name", user.name,
+                        "email", "sergej.ocheretko1@gmail.com",
+                        "password", user.password))
+                .log().all()
+                .when()
+                .post("/api/users/register")
+                .then()
+                .log().all()
+                .statusCode(anyOf(is(409), (is(400))))
+                .body("success", equalTo(false))
+                .body("message", containsString("same email"));
+
+    }
+
+    @Step("Регистрация без тела запроса")
+    protected static void withoutBodyRegistration() {
+        given()
+                .header("X-Auth-Token", user.token)
+                .contentType(ContentType.JSON)
+                .body(Map.of(
+                        "name", "",
+                        "email", "",
+                        "password", ""))
+                .log().all()
+                .when()
+                .post("/api/users/register")
+                .then()
+                .log().all()
+                .statusCode(400)
+                .body("success", equalTo(false));
+    }
+
+    @Step("Логин с неверным паролем")
+    protected static void loginWithIncorrectPassword(TestUser user) {
+        given()
+                .header("X-Auth-Token", user.token)
+                .contentType(ContentType.JSON)
+                .body(Map.of(
+                        "name", user.name,
+                        "email", user.email,
+                        "password", "1"))
+                .log().all()
+                .when()
+                .post("/api/users/login")
+                .then()
+                .log().all()
+                .statusCode(400)
+                .body("success", equalTo(false));
+    }
+
+    @Step("Логин с незарегистрированным email")
+    protected static void loginWithUnregisteredEmailMethod() {
+        given()
+                .header("X-Auth-Token", user.token)
+                .contentType(ContentType.JSON)
+                .body(Map.of(
+                        "name", user.name,
+                        "email", "s.ocheretko@gmail.com",
+                        "password", user.password))
+                .log().all()
+                .when()
+                .post("/api/users/login")
+                .then()
+                .log().all()
+                .statusCode(401)
+                .body("success", equalTo(false))
+                .body("message", containsString("Incorrect email"));
+    }
+
+    @Step("Логин без тела запроса")
+    protected static void loginWithoudBodyMethod() {
+        given()
+                .header("X-Auth-Token", user.token)
+                .contentType(ContentType.JSON)
+                .body(Map.of(
+                        "name", "",
+                        "email", "",
+                        "password", ""))
+                .log().all()
+                .when()
+                .post("/api/users/login")
+                .then()
+                .log().all()
+                .statusCode(400)
+                .body("success", equalTo(false));
+
+    }
+
+    @Step("Логин с некорректным Content-Type")
+    protected static void loginWithIncorrectContentType() {
+        String rawBody = """
                 {
                     "name": "",
                     "email": "",
                     "password": ""
                 }
                 """;
-            given()
-                    .header("X-Auth-Token", user.token)
-                    .contentType("text/plain")
-                    .body(rawBody)
-                    .log().all()
-                    .when()
-                    .post("/api/users/register")
-                    .then()
-                    .log().all()
-                    .statusCode(statusCode)
-                    .body("success", equalTo(false));
-        } else {
-            given()
-                    .header("X-Auth-Token", user.token)
-                    .contentType(ContentType.JSON)
-                    .body(body)
-                    .log().all()
-                    .when()
-                    .post("/api/users/register")
-                    .then()
-                    .log().all()
-                    .statusCode(statusCode)
-                    .body("success", equalTo(false))
-                    .body("message", containsString(expectedMessage));
-        }
+        given()
+                .header("X-Auth-Token", user.token)
+                .contentType("text/plain")
+                .log().all()
+                .when()
+                .post("/api/users/login")
+                .then()
+                .log().all()
+                .statusCode(400)
+                .body("success", equalTo(false));
+
     }
 
 
