@@ -10,22 +10,27 @@ public class NotesApiTests extends MethodsNotesApi {
     @Test
     @DisplayName("Проверка работоспособности сервера API")
     @Order(1)
+    @Tag("api")
     @Tag("smoke")
     @Tag("regression")
+
     void checkApiServerHealth() {
         checkApiHealth();
     }
 
     @Test
     @DisplayName("Создание заметки")
+    @Tag("api")
     @Tag("smoke")
     @Tag("regression")
+
     void createNotes() {
         createNote(note);
     }
 
     @Test
     @DisplayName("Взять все заметки")
+    @Tag("api")
     @Tag("regression")
     void retrieveListOfNotes() {
         getAllNotes(note);
@@ -33,6 +38,7 @@ public class NotesApiTests extends MethodsNotesApi {
 
     @Test
     @DisplayName("Создание и получение заметки по ID")
+    @Tag("api")
     @Tag("smoke")
     @Tag("regression")
     void createAndGetNoteById() {
@@ -44,6 +50,7 @@ public class NotesApiTests extends MethodsNotesApi {
 
     @Test
     @DisplayName("Обновление заметки по ID")
+    @Tag("api")
     @Tag("regression")
     void updateNote() {
 
@@ -54,6 +61,7 @@ public class NotesApiTests extends MethodsNotesApi {
 
     @Test
     @DisplayName("Обновление статуса Completed")
+    @Tag("api")
     @Tag("regression")
     void completedUpdate() {
         createNote(note);
@@ -64,6 +72,8 @@ public class NotesApiTests extends MethodsNotesApi {
 
     @Test
     @DisplayName("Удаление заметки по Id")
+
+    @Tag("api")
     @Tag("smoke")
     void deleteNote() {
 
@@ -73,6 +83,7 @@ public class NotesApiTests extends MethodsNotesApi {
 
 
     @Test
+    @Tag("api")
     @Tag("negative")
     @DisplayName("Создание заметки без токена")
     void createNoteWithoutToken() {
@@ -80,6 +91,7 @@ public class NotesApiTests extends MethodsNotesApi {
     }
 
     @Test
+    @Tag("api")
     @Tag("negative")
     @DisplayName("Создание заметки с пустым title")
     void createNoteWithEmptyTitle() {
@@ -87,6 +99,7 @@ public class NotesApiTests extends MethodsNotesApi {
     }
 
     @Test
+    @Tag("api")
     @Tag("negative")
     @DisplayName("Создание заметки с title < 4 символов")
     void createNoteWithShortTitle() {
@@ -94,6 +107,7 @@ public class NotesApiTests extends MethodsNotesApi {
     }
 
     @Test
+    @Tag("api")
     @Tag("negative")
     @DisplayName("Создание заметки с title > 100 символов")
     void createNoteWithLongTitle() {
@@ -102,6 +116,7 @@ public class NotesApiTests extends MethodsNotesApi {
 
 
     @Test
+    @Tag("api")
     @Tag("negative")
     @DisplayName("Создание заметки с неизвестной категорией")
     void createNoteWithInvalidCategory() {
@@ -109,6 +124,7 @@ public class NotesApiTests extends MethodsNotesApi {
     }
 
     @Test
+    @Tag("api")
     @Tag("negative")
     @DisplayName("Обновление несуществующей заметки")
     void updateNonexistentNote() {
@@ -117,6 +133,7 @@ public class NotesApiTests extends MethodsNotesApi {
     }
 
     @Test
+    @Tag("api")
     @Tag("negative")
     @DisplayName("Удаление чужой заметки")
     void deleteNoteOfAnotherUser() {
@@ -125,6 +142,7 @@ public class NotesApiTests extends MethodsNotesApi {
 
 
     @Test
+    @Tag("api")
     @Tag("negative")
     @DisplayName("Обновление заметки без тела запроса")
     void updateNoteWithEmptyBody() {
@@ -133,6 +151,7 @@ public class NotesApiTests extends MethodsNotesApi {
     }
 
     @Test
+    @Tag("api")
     @Tag("negative")
     @DisplayName("Создание заметки с некорректным Content-Type")
     void createNoteWithInvalidContentType() {

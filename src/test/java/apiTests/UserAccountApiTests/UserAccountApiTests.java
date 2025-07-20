@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 public class UserAccountApiTests extends MethodsUserAccountApi {
 
     @Test
+    @Tag("api")
     @DisplayName("Проверка работоспособности сервера API")
     @Order(1)
     @Tag("smoke")
@@ -17,6 +18,7 @@ public class UserAccountApiTests extends MethodsUserAccountApi {
 
 
     @Test
+    @Tag("api")
     @DisplayName("Логин и сохранение токена")
     @Order(2)
     @Tag("smoke")
@@ -26,6 +28,7 @@ public class UserAccountApiTests extends MethodsUserAccountApi {
 
 
     @Test
+    @Tag("api")
     @DisplayName("Профиль возвращается корректно для авторизованного пользователя")
     @Order(3)
     @Tag("smoke")
@@ -35,6 +38,7 @@ public class UserAccountApiTests extends MethodsUserAccountApi {
 
 
     @Test
+    @Tag("api")
     @DisplayName("Профиль успешно обновляется")
     @Order(4)
     void updateProfile_shouldSucceed() {
@@ -42,6 +46,7 @@ public class UserAccountApiTests extends MethodsUserAccountApi {
     }
 
     @Test
+    @Tag("api")
     @DisplayName("Сбрасываем пароль")
     @Order(5)
     @Tag("smoke")
@@ -51,6 +56,7 @@ public class UserAccountApiTests extends MethodsUserAccountApi {
 
 
     @Test
+    @Tag("api")
     @DisplayName("Сброс пароля работает при фиктивном токене (эмуляция)")
     @Order(6)
     void resetPassword_withMockToken_shouldReturnResponse() {
@@ -59,6 +65,7 @@ public class UserAccountApiTests extends MethodsUserAccountApi {
 
 
     @Test
+    @Tag("api")
     @DisplayName("Меняем пароль")
     @Order(7)
     @Tag("smoke")
@@ -67,6 +74,7 @@ public class UserAccountApiTests extends MethodsUserAccountApi {
     }
 
     @Test
+    @Tag("api")
     @DisplayName("Выходим из системы")
     @Order(8)
     @Tag("smoke")
@@ -75,6 +83,7 @@ public class UserAccountApiTests extends MethodsUserAccountApi {
     }
 
     @Test
+    @Tag("api")
     @DisplayName("Удаление аккаунта")
     @Order(9)
     @Tag("smoke")
@@ -83,6 +92,7 @@ public class UserAccountApiTests extends MethodsUserAccountApi {
     }
 
     @Test
+    @Tag("api")
     @Tag("negative")
     @DisplayName("Регистрация с пустым email")
     void registerWithEmptyEmail() {
@@ -90,6 +100,7 @@ public class UserAccountApiTests extends MethodsUserAccountApi {
     }
 
     @Test
+    @Tag("api")
     @Tag("negative")
     @DisplayName("Регистрация с некорректным email")
     void registerWithInvalidEmail() {
@@ -97,6 +108,7 @@ public class UserAccountApiTests extends MethodsUserAccountApi {
     }
 
     @Test
+    @Tag("api")
     @Tag("negative")
     @DisplayName("Регистрация с коротким паролем")
     void registerWithShortPassword() {
@@ -105,6 +117,7 @@ public class UserAccountApiTests extends MethodsUserAccountApi {
     }
 
     @Test
+    @Tag("api")
     @Tag("negative")
     @DisplayName("Регистрация с уже существующим email")
     void registerWithDuplicateEmail() {
@@ -112,6 +125,7 @@ public class UserAccountApiTests extends MethodsUserAccountApi {
     }
 
     @Test
+    @Tag("api")
     @Tag("negative")
     @DisplayName("Регистрация без тела запроса")
     void registerWithEmptyBody() {
@@ -119,6 +133,7 @@ public class UserAccountApiTests extends MethodsUserAccountApi {
     }
 
     @Test
+    @Tag("api")
     @Tag("negative")
     @DisplayName("Логин с неверным паролем")
     void loginWithWrongPassword() {
@@ -126,6 +141,7 @@ public class UserAccountApiTests extends MethodsUserAccountApi {
     }
 
     @Test
+    @Tag("api")
     @Tag("negative")
     @DisplayName("Логин с незарегистрированным email")
     void loginWithUnregisteredEmail() {
@@ -134,6 +150,7 @@ public class UserAccountApiTests extends MethodsUserAccountApi {
     }
 
     @Test
+    @Tag("api")
     @Tag("negative")
     @DisplayName("Логин без тела запроса")
     void loginWithEmptyBody() {
@@ -142,6 +159,7 @@ public class UserAccountApiTests extends MethodsUserAccountApi {
     }
 
     @Test
+    @Tag("api")
     @Tag("negative")
     @DisplayName("Логин с некорректным Content-Type")
     void loginWithInvalidContentType() {
