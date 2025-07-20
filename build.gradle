@@ -57,8 +57,13 @@ tasks.register("regressionTest", Test) {
 
 tasks.named("test") {
     useJUnitPlatform()
-    systemProperty 'includeTags', System.getProperty('includeTags')
-    filter {
-        includeTags System.getProperty('includeTags')
+
+    def tags = System.getProperty('includeTags')
+    if (tags) {
+        systemProperty 'includeTags', tags
+        filter {
+            includeTags tags.split(',') // если нужно поддерживать несколько тегов
+        }
     }
 }
+
