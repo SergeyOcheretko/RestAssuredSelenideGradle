@@ -8,17 +8,21 @@ import com.github.javafaker.Faker;
 import io.qameta.allure.*;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.stream.Stream;
 
 @Epic("Аутентификация")
 @Feature("Регистрация")
 @Owner("SergeyQA")
+@Tag("ui")
 public class RegisterTests extends UiBaseTest {
 
     private static final String DUMMY_PASSWORD = TestConfig.validPassword();
@@ -27,6 +31,7 @@ public class RegisterTests extends UiBaseTest {
     private String generateUniqueUsername() {
         return "user" + registerPage.createRandomUsername();
     }
+
 
     @Test
     @Story("Обычный username")
@@ -133,4 +138,5 @@ public class RegisterTests extends UiBaseTest {
                 Arguments.of("Email вместо Username", "WEDIID@gmail.com", validPass, validPass, "Invalid username")
         );
     }
+
 }

@@ -51,28 +51,25 @@ allure {
 
 tasks.withType(Test).configureEach {
     useJUnitPlatform {
-        def includeProp = System.getProperty('includeTags')
+        def includeProp = System.getProperty("includeTags")
         if (includeProp) {
-            includeTags(*(includeProp.split(',') as String[]))
+            includeTags(*(includeProp.split(",") as String[]))
         }
 
-        def excludeProp = System.getProperty('excludeTags')
+        def excludeProp = System.getProperty("excludeTags")
         if (excludeProp) {
-            excludeTags(*(excludeProp.split(',') as String[]))
+            excludeTags(*(excludeProp.split(",") as String[]))
         }
     }
-
-    systemProperty "selenide.logging", "false"
 
     testLogging {
         events "passed", "failed", "skipped"
         exceptionFormat "short"
-        showStandardStreams = false
     }
 
+    systemProperty "selenide.logging", "false"
     outputs.upToDateWhen { false }
 }
-
 
 tasks.register("smokeTest", Test) {
     useJUnitPlatform {
@@ -90,4 +87,8 @@ tasks.register("apiTest", Test) {
     useJUnitPlatform {
         includeTags "api"
     }
+}
+tasks.withType(Test).configureEach {
+    systemProperty "user.language", "ru"
+    systemProperty "user.country", "RU"
 }

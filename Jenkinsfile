@@ -20,7 +20,7 @@ pipeline {
                 echo '🧪 Запускаем UI тесты...'
                 bat '''
                     chcp 65001
-                    gradlew clean test -DincludeTags=ui --no-daemon --gradle-user-home=%GRADLE_USER_HOME%
+                    gradlew clean test -DincludeTags=ui --console=plain --no-daemon --gradle-user-home=%GRADLE_USER_HOME%
                 '''
             }
         }
@@ -28,11 +28,10 @@ pipeline {
         stage('API Tests') {
             steps {
                 echo '🌐 Запускаем API тесты...'
-              bat '''
-                  chcp 65001
-                  gradlew test --tests apiTests.Runner.ApiRunner --no-daemon --gradle-user-home=%GRADLE_USER_HOME%
-              '''
-
+                bat '''
+                    chcp 65001
+                    gradlew test --tests apiTests.Runner.ApiRunner --console=plain --no-daemon --gradle-user-home=%GRADLE_USER_HOME%
+                '''
             }
         }
 
@@ -41,7 +40,7 @@ pipeline {
                 echo '🚬 Smoke-прогон...'
                 bat '''
                     chcp 65001
-                   gradlew clean test -DincludeTags=smoke --no-daemon --gradle-user-home=%GRADLE_USER_HOME%
+                    gradlew clean test -DincludeTags=smoke --console=plain --no-daemon --gradle-user-home=%GRADLE_USER_HOME%
                 '''
             }
         }
@@ -51,7 +50,7 @@ pipeline {
                 echo '🔁 Regression-прогон...'
                 bat '''
                     chcp 65001
-                    ggradlew clean test -DincludeTags=regression --no-daemon --gradle-user-home=%GRADLE_USER_HOME%
+                    gradlew clean test -DincludeTags=regression --console=plain --no-daemon --gradle-user-home=%GRADLE_USER_HOME%
                 '''
             }
         }
@@ -61,7 +60,7 @@ pipeline {
                 echo '📊 Генерируем Allure отчёт...'
                 bat '''
                     chcp 65001
-                    gradlew allureReport --no-daemon --gradle-user-home=%GRADLE_USER_HOME%
+                    gradlew allureReport --console=plain --no-daemon --gradle-user-home=%GRADLE_USER_HOME%
                 '''
             }
         }

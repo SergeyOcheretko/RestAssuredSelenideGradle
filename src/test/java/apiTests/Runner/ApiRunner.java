@@ -3,6 +3,7 @@ package apiTests.Runner;
 import apiTests.NotesApiTests.NotesApiTests;
 import apiTests.UserAccountApiTests.UserAccountApiTests;
 import org.junit.platform.suite.api.IncludeEngines;
+import org.junit.platform.suite.api.IncludeTags;
 import org.junit.platform.suite.api.SelectClasses;
 import org.junit.platform.suite.api.Suite;
 
@@ -12,5 +13,5 @@ import org.junit.platform.suite.api.Suite;
         NotesApiTests.class,
         UserAccountApiTests.class
 })
-
+@IncludeTags("api")
 public class ApiRunner {}
