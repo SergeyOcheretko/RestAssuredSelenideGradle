@@ -48,7 +48,6 @@ allure {
 tasks.withType(Test) {
     useJUnitPlatform()
 
-
     def excludeProp = System.getProperty('excludeTags')
     if (excludeProp) {
         def excludes = excludeProp.split(',') as String[]
@@ -58,10 +57,18 @@ tasks.withType(Test) {
     }
 
     testLogging {
-        events "passed", "failed", "skipped"
+        events "started", "passed", "skipped", "failed"
         exceptionFormat "full"
+        showStandardStreams = true
+    }
+
+    outputs.upToDateWhen { false }
+
+    doLast {
+        println "✅ Тесты завершены. Лог смотри в build/test-results/test/"
     }
 }
+
 
 tasks.register("smokeTest", Test) {
     useJUnitPlatform { includeTags "smoke" }
