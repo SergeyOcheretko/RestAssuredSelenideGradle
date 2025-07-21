@@ -88,7 +88,4 @@ tasks.register("apiTest", Test) {
         includeTags "api"
     }
 }
-tasks.withType(Test).configureEach {
-    systemProperty "user.language", "ru"
-    systemProperty "user.country", "RU"
-}
+

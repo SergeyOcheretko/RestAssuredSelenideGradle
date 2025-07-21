@@ -30,7 +30,7 @@ pipeline {
                 echo '🌐 Запускаем API тесты...'
                 bat '''
                     chcp 65001
-                    gradlew test --tests apiTests.Runner.ApiRunner --console=plain --no-daemon --gradle-user-home=%GRADLE_USER_HOME%
+                    gradlew test --tests apiTests.Runner.ApiRunner -DincludeTags=api --console=plain --no-daemon --gradle-user-home=%GRADLE_USER_HOME%
                 '''
             }
         }
