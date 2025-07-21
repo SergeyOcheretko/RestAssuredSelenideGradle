@@ -36,20 +36,6 @@ pipeline {
             }
         }
 
-        stage('Smoke Tests') {
-            steps {
-                echo '🚬 Smoke-прогон...'
-                bat 'call .\\gradlew smokeTest --console=plain --no-daemon --gradle-user-home=%GRADLE_USER_HOME%'
-            }
-        }
-
-        stage('Regression Tests') {
-            steps {
-                echo '🔁 Regression-прогон...'
-                bat 'call .\\gradlew regressionTest --console=plain --no-daemon --gradle-user-home=%GRADLE_USER_HOME%'
-            }
-        }
-
         stage('Allure Report') {
             steps {
                 echo '📊 Генерируем Allure отчёт...'

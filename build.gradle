@@ -44,9 +44,6 @@ allure {
     }
 }
 
-// === ИСКЛЮЧЕНИЕ SUITE RUNNER'ОВ ИЗ ПРОГОНОВ GRADLE ===
-// Добавьте сюда все ваши Suite Runner'ы, чтобы они не запускались в CI/CD и через gradle test/apiTest/uiTest и т.д.
-// Путь указывается относительно src/test/java, точка — как слэш.
 tasks.withType(Test).configureEach {
     useJUnitPlatform()
     testLogging {
@@ -96,22 +93,3 @@ tasks.register("apiTest", Test) {
     exclude '**/ApiRunner.class'
 }
 
-tasks.register("smokeTest", Test) {
-    description = "Run only smoke-tagged tests"
-    group = "verification"
-    useJUnitPlatform {
-        includeTags "smoke"
-    }
-    exclude '**/UiRunner.class'
-    exclude '**/ApiRunner.class'
-}
-
-tasks.register("regressionTest", Test) {
-    description = "Run only regression-tagged tests"
-    group = "verification"
-    useJUnitPlatform {
-        includeTags "regression"
-    }
-    exclude '**/UiRunner.class'
-    exclude '**/ApiRunner.class'
-}
