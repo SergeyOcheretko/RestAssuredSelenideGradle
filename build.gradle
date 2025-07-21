@@ -16,15 +16,18 @@ java {
 }
 
 dependencies {
+    // JUnit Jupiter
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.2'
     testImplementation 'org.junit.jupiter:junit-jupiter-params:5.10.3'
-    testRuntimeOnly   'org.junit.jupiter:junit-jupiter-engine:5.10.2'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.2'
 
+    // JUnit Platform
     testImplementation 'org.junit.platform:junit-platform-launcher:1.10.3'
     testImplementation 'org.junit.platform:junit-platform-suite:1.10.0'
     testImplementation 'org.junit.platform:junit-platform-suite-engine:1.10.0'
-    testRuntimeOnly   'org.junit.platform:junit-platform-suite-engine:1.10.0'
+    testRuntimeOnly 'org.junit.platform:junit-platform-suite-engine:1.10.0'
 
+    // Test tools
     testImplementation 'com.codeborne:selenide:6.19.1'
     testImplementation 'io.rest-assured:rest-assured:5.3.2'
     testImplementation 'com.github.javafaker:javafaker:1.0.2'
@@ -35,6 +38,7 @@ dependencies {
     testImplementation 'org.assertj:assertj-core:3.26.0'
     testImplementation 'io.github.bonigarcia:webdrivermanager:5.9.2'
 
+    // Allure
     testImplementation 'io.qameta.allure:allure-junit5:2.25.0'
 }
 
@@ -46,21 +50,15 @@ allure {
 }
 
 tasks.withType(Test).configureEach {
-    useJUnitPlatform()
-
-    def includeProp = System.getProperty('includeTags')
-    if (includeProp) {
-        def tags = includeProp.split(',') as List<String>
-        filter {
-            includeTags(*tags)
+    useJUnitPlatform {
+        def includeProp = System.getProperty('includeTags')
+        if (includeProp) {
+            includeTags(*(includeProp.split(',') as String[]))
         }
-    }
 
-    def excludeProp = System.getProperty('excludeTags')
-    if (excludeProp) {
-        def tags = excludeProp.split(',') as List<String>
-        filter {
-            excludeTags(*tags)
+        def excludeProp = System.getProperty('excludeTags')
+        if (excludeProp) {
+            excludeTags(*(excludeProp.split(',') as String[]))
         }
     }
 
@@ -77,22 +75,19 @@ tasks.withType(Test).configureEach {
 
 
 tasks.register("smokeTest", Test) {
-    useJUnitPlatform()
-    filter {
+    useJUnitPlatform {
         includeTags "smoke"
     }
 }
 
 tasks.register("regressionTest", Test) {
-    useJUnitPlatform()
-    filter {
+    useJUnitPlatform {
         includeTags "regression"
     }
 }
 
 tasks.register("apiTest", Test) {
-    useJUnitPlatform()
-    filter {
+    useJUnitPlatform {
         includeTags "api"
     }
 }
