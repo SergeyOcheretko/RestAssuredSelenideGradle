@@ -20,6 +20,9 @@ dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.2'
 
+    // JUnit Platform Suite API (для @Suite и подобных аннотаций)
+    testImplementation 'org.junit.platform:junit-platform-suite:1.10.0'
+
     // Test tools
     testImplementation 'com.codeborne:selenide:6.19.1'
     testImplementation 'io.rest-assured:rest-assured:5.3.2'
@@ -30,7 +33,6 @@ dependencies {
     testImplementation 'com.fasterxml.jackson.core:jackson-databind:2.17.1'
     testImplementation 'org.assertj:assertj-core:3.26.0'
     testImplementation 'io.github.bonigarcia:webdrivermanager:5.9.2'
-    testImplementation 'org.junit.platform:junit-platform-suite:1.10.0'
     // Allure
     testImplementation 'io.qameta.allure:allure-junit5:2.25.0'
 }
@@ -42,6 +44,9 @@ allure {
     }
 }
 
+// === ИСКЛЮЧЕНИЕ SUITE RUNNER'ОВ ИЗ ПРОГОНОВ GRADLE ===
+// Добавьте сюда все ваши Suite Runner'ы, чтобы они не запускались в CI/CD и через gradle test/apiTest/uiTest и т.д.
+// Путь указывается относительно src/test/java, точка — как слэш.
 tasks.withType(Test).configureEach {
     useJUnitPlatform()
     testLogging {
@@ -50,6 +55,9 @@ tasks.withType(Test).configureEach {
     }
     systemProperty "selenide.logging", "false"
     outputs.upToDateWhen { false }
+    // Исключаем Suite Runners из всех прогонов через Gradle
+    exclude '**/ApiRunner.class'
+    exclude '**/UiRunner.class'
     // Поддержка запуска по тегам через -DincludeTags и -DexcludeTags
     doFirst {
         def includeProp = System.getProperty("includeTags")
@@ -67,13 +75,35 @@ tasks.withType(Test).configureEach {
     }
 }
 
-// Кастомные задачи для разных прогонов по тегам
+// Кастомные таски для прогонов по тегам
+tasks.register("uiTest", Test) {
+    description = "Run only UI-tagged tests"
+    group = "verification"
+    useJUnitPlatform {
+        includeTags "ui"
+    }
+    exclude '**/UiRunner.class'
+    exclude '**/ApiRunner.class'
+}
+
+tasks.register("apiTest", Test) {
+    description = "Run only API-tagged tests"
+    group = "verification"
+    useJUnitPlatform {
+        includeTags "api"
+    }
+    exclude '**/UiRunner.class'
+    exclude '**/ApiRunner.class'
+}
+
 tasks.register("smokeTest", Test) {
     description = "Run only smoke-tagged tests"
     group = "verification"
     useJUnitPlatform {
         includeTags "smoke"
     }
+    exclude '**/UiRunner.class'
+    exclude '**/ApiRunner.class'
 }
 
 tasks.register("regressionTest", Test) {
@@ -82,15 +112,6 @@ tasks.register("regressionTest", Test) {
     useJUnitPlatform {
         includeTags "regression"
     }
-}
-
-tasks.register("uiTest", Test) {
-    useJUnitPlatform {
-        includeTags "ui"
-    }
-}
-tasks.register("apiTest", Test) {
-    useJUnitPlatform {
-        includeTags "api"
-    }
+    exclude '**/UiRunner.class'
+    exclude '**/ApiRunner.class'
 }
