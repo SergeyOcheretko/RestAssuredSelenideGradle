@@ -58,7 +58,7 @@ tasks.withType(Test).configureEach {
     systemProperty "selenide.logging", "false"
 
     testLogging {
-        events "started", "passed", "failed", "skipped"
+        events "passed", "failed", "skipped"
         exceptionFormat "short"
         showStandardStreams = false
     }
