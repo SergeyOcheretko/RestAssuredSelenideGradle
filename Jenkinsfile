@@ -15,15 +15,15 @@ pipeline {
             }
         }
 
-//         stage('UI Tests') {
-//             steps {
-//                 echo '🧪 Запускаем UI тесты...'
-//                 bat '''
-//                     chcp 65001
-//                     gradlew clean test -DincludeTags=ui --no-daemon --gradle-user-home=%GRADLE_USER_HOME%
-//                 '''
-//             }
-//         }
+        stage('UI Tests') {
+            steps {
+                echo '🧪 Запускаем UI тесты...'
+                bat '''
+                    chcp 65001
+                    gradlew clean test -DincludeTags=ui --no-daemon --gradle-user-home=%GRADLE_USER_HOME%
+                '''
+            }
+        }
 
         stage('API Tests') {
             steps {
