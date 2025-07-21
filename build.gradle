@@ -1,3 +1,4 @@
+
 plugins {
     id 'java'
     id 'io.qameta.allure' version '2.11.2'
@@ -9,17 +10,9 @@ version = '1.0-SNAPSHOT'
 repositories {
     mavenCentral()
 }
-
 java {
     sourceCompatibility = JavaVersion.VERSION_17
     targetCompatibility = JavaVersion.VERSION_17
-}
-
-allure {
-    version = '2.25.0'
-    useJUnit5 {
-        version = '2.25.0'
-    }
 }
 
 dependencies {
@@ -59,3 +52,31 @@ tasks.register("apiTest", Test) {
     useJUnitPlatform { includeTags "api" }
 }
 
+allure {
+    autoconfigure = true
+    aspectjweaver = true
+    version = '2.25.0'
+
+    useJUnit5 {
+        version = '2.25.0'
+    }
+}
+
+
+tasks.withType(Test).configureEach {
+    testLogging {
+        events "passed", "failed", "skipped"
+        exceptionFormat "full"
+    }
+}
+tasks.named("test") {
+    useJUnitPlatform()
+
+    def tagsProp = System.getProperty('includeTags')
+    if (tagsProp) {
+        def tags = tagsProp.split(',') as String[]
+        filter {
+            includeTags(*tags)
+        }
+    }
+}
