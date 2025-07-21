@@ -59,7 +59,7 @@ public class LoginTests extends UiBaseTest {
     @DisplayName("Successful login with 3-character username")
     void loginWithThreeCharUsername() {
         String username = new Faker().regexify("[A-Za-z]{3}");
-        String password = DUMMY_PASSWORD;
+        String password = new Faker().regexify("[A-Za-z]{5}");
 
         registerPage.open();
         registerPage.fillRegistrationForm(username, password, password);

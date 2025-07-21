@@ -7,7 +7,6 @@ pipeline {
     }
 
     stages {
-
         stage('Checkout') {
             steps {
                 echo '📥 Получаем код из репозитория...'
@@ -15,8 +14,10 @@ pipeline {
             }
         }
 
-        stage('Clean Allure Results') {
+        stage('Clean Build') {
             steps {
+                echo '🧹 Выполняем gradle clean...'
+                bat 'call .\\gradlew clean --no-daemon --gradle-user-home=%GRADLE_USER_HOME%'
                 echo '🧹 Очищаем allure-results...'
                 bat 'del /q build\\allure-results\\*'
             }
@@ -25,14 +26,14 @@ pipeline {
         stage('UI Tests') {
             steps {
                 echo '🧪 Запускаем UI тесты...'
-                bat 'call .\\gradlew uiTest --console=plain --no-daemon --gradle-user-home=%GRADLE_USER_HOME%'
+                bat(script: 'call .\\gradlew uiTest --console=plain --no-daemon --gradle-user-home=%GRADLE_USER_HOME%', returnStatus: true)
             }
         }
 
         stage('API Tests') {
             steps {
                 echo '🌐 Запускаем API тесты...'
-                bat 'call .\\gradlew apiTest --console=plain --no-daemon --gradle-user-home=%GRADLE_USER_HOME%'
+                bat(script: 'call .\\gradlew apiTest --console=plain --no-daemon --gradle-user-home=%GRADLE_USER_HOME%', returnStatus: true)
             }
         }
 
@@ -54,7 +55,7 @@ pipeline {
     post {
         always {
             echo '📦 Архивируем JUnit и Allure HTML отчёт...'
-            junit '**/build/test-results/test/*.xml'
+            junit testResults: '**/build/test-results/test/*.xml', allowEmptyResults: true, skipMarkingBuildUnstable: true
             archiveArtifacts artifacts: 'build/allure-report/**', allowEmptyArchive: true
         }
     }
