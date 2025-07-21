@@ -84,9 +84,12 @@ tasks.register("regressionTest", Test) {
     }
 }
 
+tasks.register("uiTest", Test) {
+    useJUnitPlatform {
+        includeTags "ui"
+    }
+}
 tasks.register("apiTest", Test) {
-    description = "Run only api-tagged tests"
-    group = "verification"
     useJUnitPlatform {
         includeTags "api"
     }
