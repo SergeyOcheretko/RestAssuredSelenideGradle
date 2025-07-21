@@ -1,6 +1,11 @@
 pipeline {
     agent any
 
+    environment {
+        JAVA_TOOL_OPTIONS = '-Dfile.encoding=UTF-8'
+
+    }
+
     stages {
 
         stage('Checkout') {
@@ -13,35 +18,50 @@ pipeline {
         stage('UI Tests') {
             steps {
                 echo '🧪 Запускаем UI тесты...'
-                bat './gradlew clean test -DincludeTags=ui'
+                bat '''
+                    chcp 65001
+                    gradlew clean test -DincludeTags=ui --no-daemon --gradle-user-home=%GRADLE_USER_HOME%
+                '''
             }
         }
 
         stage('API Tests') {
             steps {
                 echo '🌐 Запускаем API тесты...'
-                bat './gradlew test -DincludeTags=api'
+                bat '''
+                    chcp 65001
+                    gradlew test -DincludeTags=api --no-daemon --gradle-user-home=%GRADLE_USER_HOME%
+                '''
             }
         }
 
         stage('Smoke Tests') {
             steps {
                 echo '🚬 Smoke-прогон...'
-                bat './gradlew smokeTest'
+                bat '''
+                    chcp 65001
+                    gradlew smokeTest --no-daemon --gradle-user-home=%GRADLE_USER_HOME%
+                '''
             }
         }
 
         stage('Regression Tests') {
             steps {
                 echo '🔁 Regression-прогон...'
-                bat './gradlew regressionTest'
+                bat '''
+                    chcp 65001
+                    gradlew regressionTest --no-daemon --gradle-user-home=%GRADLE_USER_HOME%
+                '''
             }
         }
 
         stage('Allure Report') {
             steps {
                 echo '📊 Генерируем Allure отчёт...'
-                bat './gradlew allureReport'
+                bat '''
+                    chcp 65001
+                    gradlew allureReport --no-daemon --gradle-user-home=%GRADLE_USER_HOME%
+                '''
             }
         }
 
@@ -54,7 +74,9 @@ pipeline {
 
     post {
         always {
+            echo '📦 Архивируем JUnit и Allure HTML отчёт...'
             junit '**/build/test-results/test/*.xml'
+            archiveArtifacts artifacts: 'build/allure-report/**', allowEmptyArchive: true
         }
     }
 }
