@@ -1,16 +1,14 @@
 package UiTests.tests.auth;
 
 import UiTests.base.UiBaseTest;
+import UiTests.generator.SimpleAsciiDisplayNameGenerator;
 import UiTests.pages.auth.RegisterPage;
 import UiTests.utils.FlashMessage;
 import UiTests.utils.TestConfig;
 import com.github.javafaker.Faker;
 import io.qameta.allure.*;
 import org.assertj.core.api.SoftAssertions;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -23,6 +21,7 @@ import java.util.stream.Stream;
 @Feature("Регистрация")
 @Owner("SergeyQA")
 @Tag("ui")
+@DisplayNameGeneration(SimpleAsciiDisplayNameGenerator.class)
 public class RegisterTests extends UiBaseTest {
 
     private static final String DUMMY_PASSWORD = TestConfig.validPassword();

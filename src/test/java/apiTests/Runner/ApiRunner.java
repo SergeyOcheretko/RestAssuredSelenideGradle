@@ -13,5 +13,5 @@ import org.junit.platform.suite.api.Suite;
         NotesApiTests.class,
         UserAccountApiTests.class
 })
-@IncludeTags("api")
+
 public class ApiRunner {}

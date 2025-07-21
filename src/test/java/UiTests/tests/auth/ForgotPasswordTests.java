@@ -1,11 +1,13 @@
 package UiTests.tests.auth;
 
 import UiTests.base.UiBaseTest;
+import UiTests.generator.SimpleAsciiDisplayNameGenerator;
 import UiTests.pages.auth.ForgotPasswordPage;
 import com.github.javafaker.Faker;
 import io.qameta.allure.*;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import UiTests.utils.FlashMessage;
@@ -21,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Feature("Восстановление пароля")
 @Owner("SergeyQA")
 @Tag("ui")
+@DisplayNameGeneration(SimpleAsciiDisplayNameGenerator.class)
 public class ForgotPasswordTests extends UiBaseTest {
 
     static final ForgotPasswordPage forgotPassword = new ForgotPasswordPage();

@@ -1,5 +1,6 @@
 package apiTests.UserAccountApiTests;
 
+import UiTests.generator.SimpleAsciiDisplayNameGenerator;
 import apiTests.models.TestUser;
 import com.github.javafaker.Faker;
 import io.qameta.allure.Step;
@@ -9,6 +10,7 @@ import io.restassured.filter.log.LogDetail;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.TestMethodOrder;
 
@@ -19,7 +21,7 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@DisplayNameGeneration(SimpleAsciiDisplayNameGenerator.class)
 public class MethodsUserAccountApi {
 
 

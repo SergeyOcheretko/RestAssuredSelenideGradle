@@ -1,10 +1,9 @@
 package apiTests.UserAccountApiTests;
 
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
+import UiTests.generator.SimpleAsciiDisplayNameGenerator;
+import org.junit.jupiter.api.*;
 
+@DisplayNameGeneration(SimpleAsciiDisplayNameGenerator.class)
 public class UserAccountApiTests extends MethodsUserAccountApi {
 
     @Test

@@ -1,6 +1,7 @@
 package UiTests.tests.auth;
 
 import UiTests.base.UiBaseTest;
+import UiTests.generator.SimpleAsciiDisplayNameGenerator;
 import UiTests.pages.auth.LoginPage;
 import UiTests.pages.auth.RegisterPage;
 import UiTests.utils.FlashMessage;
@@ -9,6 +10,7 @@ import com.github.javafaker.Faker;
 import io.qameta.allure.*;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -22,6 +24,7 @@ import java.util.stream.Stream;
 @Feature("Логин")
 @Owner("SergeyQA")
 @Tag("ui")
+@DisplayNameGeneration(SimpleAsciiDisplayNameGenerator.class)
 public class LoginTests extends UiBaseTest {
 
     static final LoginPage loginPage = new LoginPage();
