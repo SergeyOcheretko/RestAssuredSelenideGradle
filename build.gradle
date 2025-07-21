@@ -1,4 +1,3 @@
-
 plugins {
     id 'java'
     id 'io.qameta.allure' version '2.11.2'
@@ -10,6 +9,7 @@ version = '1.0-SNAPSHOT'
 repositories {
     mavenCentral()
 }
+
 java {
     sourceCompatibility = JavaVersion.VERSION_17
     targetCompatibility = JavaVersion.VERSION_17
@@ -24,22 +24,53 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok:1.18.30'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.2'
     testImplementation 'org.slf4j:slf4j-simple:2.0.9'
-    testImplementation 'org.junit.platform:junit-platform-suite:1.10.0'
     testImplementation 'com.fasterxml.jackson.core:jackson-databind:2.17.1'
     testImplementation 'org.assertj:assertj-core:3.26.0'
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.2'
     testImplementation 'org.junit.jupiter:junit-jupiter-params:5.10.3'
     testImplementation 'io.github.bonigarcia:webdrivermanager:5.9.2'
+    testImplementation 'org.junit.platform:junit-platform-launcher:1.10.3'
+    testImplementation 'org.junit.platform:junit-platform-suite:1.10.0'
     testImplementation 'org.junit.platform:junit-platform-suite-engine:1.10.0'
     testRuntimeOnly   'org.junit.platform:junit-platform-suite-engine:1.10.0'
-    testImplementation 'org.junit.platform:junit-platform-launcher:1.10.3'
-    testImplementation 'io.qameta.allure:allure-junit5:2.25.0' // Только одна строка для Allure
+    testImplementation 'io.qameta.allure:allure-junit5:2.25.0'
+}
+
+allure {
+    autoconfigure = true
+    aspectjweaver = true
+    version = '2.25.0'
+    useJUnit5 {
+        version = '2.25.0'
+    }
 }
 
 tasks.withType(Test) {
     useJUnitPlatform()
+
+    def tagsProp = System.getProperty('includeTags')
+    if (tagsProp) {
+        def tags = tagsProp.split(',') as String[]
+        filter {
+            includeTags(*tags)
+        }
+    }
+
+    def excludeProp = System.getProperty('excludeTags')
+    if (excludeProp) {
+        def excludes = excludeProp.split(',') as String[]
+        filter {
+            excludeTags(*excludes)
+        }
+    }
+
+    testLogging {
+        events "passed", "failed", "skipped"
+        exceptionFormat "full"
+    }
 }
 
+// Отдельные задачи для запусков по тегам
 tasks.register("smokeTest", Test) {
     useJUnitPlatform { includeTags "smoke" }
 }
@@ -50,33 +81,4 @@ tasks.register("regressionTest", Test) {
 
 tasks.register("apiTest", Test) {
     useJUnitPlatform { includeTags "api" }
-}
-
-allure {
-    autoconfigure = true
-    aspectjweaver = true
-    version = '2.25.0'
-
-    useJUnit5 {
-        version = '2.25.0'
-    }
-}
-
-
-tasks.withType(Test).configureEach {
-    testLogging {
-        events "passed", "failed", "skipped"
-        exceptionFormat "full"
-    }
-}
-tasks.named("test") {
-    useJUnitPlatform()
-
-    def tagsProp = System.getProperty('includeTags')
-    if (tagsProp) {
-        def tags = tagsProp.split(',') as String[]
-        filter {
-            includeTags(*tags)
-        }
-    }
 }
