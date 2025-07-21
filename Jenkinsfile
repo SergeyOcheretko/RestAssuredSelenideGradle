@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         JAVA_TOOL_OPTIONS = '-Dfile.encoding=UTF-8'
-
+        GRADLE_USER_HOME = 'C:\\temp\\gradle-cache'
     }
 
     stages {
