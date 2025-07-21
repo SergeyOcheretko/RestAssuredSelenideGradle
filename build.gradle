@@ -48,13 +48,6 @@ allure {
 tasks.withType(Test) {
     useJUnitPlatform()
 
-    def tagsProp = System.getProperty('includeTags')
-    if (tagsProp) {
-        def tags = tagsProp.split(',') as String[]
-        filter {
-            includeTags(*tags)
-        }
-    }
 
     def excludeProp = System.getProperty('excludeTags')
     if (excludeProp) {
