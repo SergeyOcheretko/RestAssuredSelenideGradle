@@ -1,7 +1,6 @@
 package UiTests.tests.auth;
 
 import UiTests.base.UiBaseTest;
-import UiTests.generator.SimpleAsciiDisplayNameGenerator;
 import UiTests.pages.auth.LoginPage;
 import UiTests.pages.auth.RegisterPage;
 import UiTests.utils.FlashMessage;
@@ -16,15 +15,15 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.stream.Stream;
 
-@Epic("Аутентификация")
-@Feature("Логин")
+import static org.assertj.core.api.Assertions.assertThat;
+
+@Epic("Authentication")
+@Feature("Login")
 @Owner("SergeyQA")
 @Tag("ui")
-@DisplayNameGeneration(SimpleAsciiDisplayNameGenerator.class)
 public class LoginTests extends UiBaseTest {
 
     static final LoginPage loginPage = new LoginPage();
@@ -32,9 +31,9 @@ public class LoginTests extends UiBaseTest {
     private final RegisterPage registerPage = new RegisterPage();
 
     @Test
-    @Story("Позитивный логин: обычный username")
+    @Story("Positive login: standard username")
     @Severity(SeverityLevel.CRITICAL)
-    @DisplayName("Успешный логин с обычным username")
+    @DisplayName("Successful login with standard username")
     void loginWithRegularUsername() {
         String username = new Faker().regexify("[A-Za-z]{5}");
         String password = DUMMY_PASSWORD;
@@ -55,9 +54,9 @@ public class LoginTests extends UiBaseTest {
     }
 
     @Test
-    @Story("Позитивный логин: 3 символа")
+    @Story("Positive login: 3 characters")
     @Severity(SeverityLevel.NORMAL)
-    @DisplayName("Успешный логин с username из 3 символов")
+    @DisplayName("Successful login with 3-character username")
     void loginWithThreeCharUsername() {
         String username = new Faker().regexify("[A-Za-z]{3}");
         String password = DUMMY_PASSWORD;
@@ -78,9 +77,9 @@ public class LoginTests extends UiBaseTest {
     }
 
     @Test
-    @Story("Позитивный логин: максимальная длина")
+    @Story("Positive login: max length")
     @Severity(SeverityLevel.NORMAL)
-    @DisplayName("Успешный логин с username из 39 символов")
+    @DisplayName("Successful login with 39-character username")
     void loginWithMaxLengthUsername() {
         String username = new Faker().regexify("[A-Za-z]{39}");
         String password = DUMMY_PASSWORD;
@@ -101,9 +100,9 @@ public class LoginTests extends UiBaseTest {
     }
 
     @Test
-    @Story("Выход из системы")
+    @Story("Logout")
     @Severity(SeverityLevel.MINOR)
-    @DisplayName("Успешный логаут после входа")
+    @DisplayName("Successful logout after login")
     void checkLogout() {
         String username = new Faker().regexify("[A-Za-z]{3}");
         String password = DUMMY_PASSWORD;
@@ -122,14 +121,11 @@ public class LoginTests extends UiBaseTest {
                 .isEqualTo(FlashMessage.SUCCESS_LOGOUT.text());
     }
 
-
-
-
     @ParameterizedTest(name = "{0}")
-    @MethodSource("NegativeLoginCasesProvider")
-    @Story("Негативный логин")
+    @MethodSource("negativeLoginCasesProvider")
+    @Story("Negative login")
     @Severity(SeverityLevel.NORMAL)
-    @DisplayName("Негативные кейсы логина")
+    @DisplayName("Negative login scenarios")
     void negativeLogin(String description, String username, String password, String expectedMessage) {
         loginPage.open();
         loginPage.fillLoginPage(username, password);
@@ -137,26 +133,26 @@ public class LoginTests extends UiBaseTest {
 
         SoftAssertions softly = new SoftAssertions();
         softly.assertThat(loginPage.getAlertMessage())
-                .as("Сообщение об ошибке для кейса «%s»", description)
+                .as("Error message for case: %s", description)
                 .containsIgnoringCase(expectedMessage);
         softly.assertAll();
     }
 
-    private static Stream<Arguments> NegativeLoginCasesProvider() {
+    private static Stream<Arguments> negativeLoginCasesProvider() {
         Faker faker = new Faker();
-        final String validLogUsername = "practice";
-        final String validLogPass = "SuperSecretPassword!";
+        final String validUsername = "practice";
+        final String validPassword = "SuperSecretPassword!";
         return Stream.of(
-                Arguments.of("Пустые поля", "", "", "Your username is invalid!"),
-                Arguments.of("Пустой Username", "", validLogPass, "Your username is invalid!"),
-                Arguments.of("Пустой Password", validLogUsername, "", "Your password is invalid!"),
-                Arguments.of("Несуществующий юзер", "ghost", "Super!", "Your username is invalid!"),
-                Arguments.of("SQL-инъекция в username", "admin'--", validLogPass, "Your username is invalid!"),
-                Arguments.of("SQL-инъекция в пароль", validLogUsername, "' OR 1=1--", "Your password is invalid!"),
-                Arguments.of("XSS в username", "<script>alert(1)</script>", validLogPass, "Your username is invalid!"),
-                Arguments.of("Username с пробелом", " practice", validLogPass, "Your username is invalid!"),
-                Arguments.of("Пароль с пробелом", validLogUsername, " SuperSecretPassword!", "Your password is invalid!"),
-                Arguments.of("Username > 39 символов", faker.regexify("[A-Za-z]{40}"), validLogPass, "Your username is invalid!")
+                Arguments.of("Empty fields", "", "", "Your username is invalid!"),
+                Arguments.of("Empty username", "", validPassword, "Your username is invalid!"),
+                Arguments.of("Empty password", validUsername, "", "Your password is invalid!"),
+                Arguments.of("Non-existent user", "ghost", "Super!", "Your username is invalid!"),
+                Arguments.of("SQL injection in username", "admin'--", validPassword, "Your username is invalid!"),
+                Arguments.of("SQL injection in password", validUsername, "' OR 1=1--", "Your password is invalid!"),
+                Arguments.of("XSS attempt in username", "<script>alert(1)</script>", validPassword, "Your username is invalid!"),
+                Arguments.of("Username with leading space", " practice", validPassword, "Your username is invalid!"),
+                Arguments.of("Password with leading space", validUsername, " SuperSecretPassword!", "Your password is invalid!"),
+                Arguments.of("Username longer than 39 characters", faker.regexify("[A-Za-z]{40}"), validPassword, "Your username is invalid!")
         );
     }
 }

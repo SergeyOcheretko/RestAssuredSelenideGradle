@@ -1,170 +1,146 @@
 package apiTests.UserAccountApiTests;
 
-import UiTests.generator.SimpleAsciiDisplayNameGenerator;
+import io.qameta.allure.Epic;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Owner;
 import org.junit.jupiter.api.*;
 
-@DisplayNameGeneration(SimpleAsciiDisplayNameGenerator.class)
+@Epic("Authentication")
+@Feature("User Account API")
+@Owner("SergeyQA")
+@Tag("api")
 public class UserAccountApiTests extends MethodsUserAccountApi {
 
     @Test
-    @Tag("api")
-    @DisplayName("Проверка работоспособности сервера API")
-    @Order(1)
     @Tag("smoke")
+    @DisplayName("Check API server health")
+    @Order(1)
     void checkApiServerHealth() {
         checkApiHealth();
     }
 
-
     @Test
-    @Tag("api")
-    @DisplayName("Логин и сохранение токена")
-    @Order(2)
     @Tag("smoke")
+    @DisplayName("Login and save token")
+    @Order(2)
     void checkLoginAndSaveToken() {
         loginAndExtractUserData(user);
     }
 
-
     @Test
-    @Tag("api")
-    @DisplayName("Профиль возвращается корректно для авторизованного пользователя")
-    @Order(3)
     @Tag("smoke")
+    @DisplayName("Profile returns correct data for authorized user")
+    @Order(3)
     void getProfile_shouldReturnCorrectData() {
         verifyBasicProfile(user);
     }
 
-
     @Test
-    @Tag("api")
-    @DisplayName("Профиль успешно обновляется")
+    @DisplayName("Profile update succeeds")
     @Order(4)
     void updateProfile_shouldSucceed() {
         verifyUserProfile(user);
     }
 
     @Test
-    @Tag("api")
-    @DisplayName("Сбрасываем пароль")
-    @Order(5)
     @Tag("smoke")
+    @DisplayName("Reset password using valid email")
+    @Order(5)
     void resetPasswordViaValidEmail() {
         verifyResetPassword(user);
     }
 
-
     @Test
-    @Tag("api")
-    @DisplayName("Сброс пароля работает при фиктивном токене (эмуляция)")
+    @DisplayName("Password reset works with mock token (simulation)")
     @Order(6)
     void resetPassword_withMockToken_shouldReturnResponse() {
         verifyResetPassword(user);
     }
 
-
     @Test
-    @Tag("api")
-    @DisplayName("Меняем пароль")
-    @Order(7)
     @Tag("smoke")
+    @DisplayName("Change password")
+    @Order(7)
     void changePassword() {
         changePassword(user);
     }
 
     @Test
-    @Tag("api")
-    @DisplayName("Выходим из системы")
-    @Order(8)
     @Tag("smoke")
+    @DisplayName("Logout from system")
+    @Order(8)
     void logoutSystem() {
         logout(user);
     }
 
     @Test
-    @Tag("api")
-    @DisplayName("Удаление аккаунта")
-    @Order(9)
     @Tag("smoke")
+    @DisplayName("Delete test account")
+    @Order(9)
     void deleteTestAccount() {
         deleteAccount(user);
     }
 
     @Test
-    @Tag("api")
     @Tag("negative")
-    @DisplayName("Регистрация с пустым email")
+    @DisplayName("Register with empty email")
     void registerWithEmptyEmail() {
         incorrectEmailRegistration();
     }
 
     @Test
-    @Tag("api")
     @Tag("negative")
-    @DisplayName("Регистрация с некорректным email")
+    @DisplayName("Register with invalid email")
     void registerWithInvalidEmail() {
         emptyEmailRegistration();
     }
 
     @Test
-    @Tag("api")
     @Tag("negative")
-    @DisplayName("Регистрация с коротким паролем")
+    @DisplayName("Register with short password")
     void registerWithShortPassword() {
         shortPasswordRegistration();
-
     }
 
     @Test
-    @Tag("api")
     @Tag("negative")
-    @DisplayName("Регистрация с уже существующим email")
+    @DisplayName("Register with duplicate email")
     void registerWithDuplicateEmail() {
         duplicateEmail();
     }
 
     @Test
-    @Tag("api")
     @Tag("negative")
-    @DisplayName("Регистрация без тела запроса")
+    @DisplayName("Register with empty request body")
     void registerWithEmptyBody() {
         withoutBodyRegistration();
     }
 
     @Test
-    @Tag("api")
     @Tag("negative")
-    @DisplayName("Логин с неверным паролем")
+    @DisplayName("Login with incorrect password")
     void loginWithWrongPassword() {
         loginWithIncorrectPassword(user);
     }
 
     @Test
-    @Tag("api")
     @Tag("negative")
-    @DisplayName("Логин с незарегистрированным email")
+    @DisplayName("Login with unregistered email")
     void loginWithUnregisteredEmail() {
         loginWithUnregisteredEmailMethod();
-
     }
 
     @Test
-    @Tag("api")
     @Tag("negative")
-    @DisplayName("Логин без тела запроса")
+    @DisplayName("Login with empty request body")
     void loginWithEmptyBody() {
         loginWithoudBodyMethod();
-
     }
 
     @Test
-    @Tag("api")
     @Tag("negative")
-    @DisplayName("Логин с некорректным Content-Type")
+    @DisplayName("Login with incorrect Content-Type")
     void loginWithInvalidContentType() {
         loginWithIncorrectContentType();
-
     }
-
-
 }

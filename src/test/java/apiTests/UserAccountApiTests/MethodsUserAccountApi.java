@@ -1,6 +1,5 @@
 package apiTests.UserAccountApiTests;
 
-import UiTests.generator.SimpleAsciiDisplayNameGenerator;
 import apiTests.models.TestUser;
 import com.github.javafaker.Faker;
 import io.qameta.allure.Step;
@@ -21,7 +20,6 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-@DisplayNameGeneration(SimpleAsciiDisplayNameGenerator.class)
 public class MethodsUserAccountApi {
 
 

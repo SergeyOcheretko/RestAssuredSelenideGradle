@@ -8,28 +8,26 @@ import org.junit.jupiter.api.Test;
 public class NotesApiTests extends MethodsNotesApi {
 
     @Test
-    @DisplayName("Проверка работоспособности сервера API")
+    @DisplayName("Check API server health")
     @Order(1)
     @Tag("api")
     @Tag("smoke")
     @Tag("regression")
-
     void checkApiServerHealth() {
         checkApiHealth();
     }
 
     @Test
-    @DisplayName("Создание заметки")
+    @DisplayName("Create note")
     @Tag("api")
     @Tag("smoke")
     @Tag("regression")
-
     void createNotes() {
         createNote(note);
     }
 
     @Test
-    @DisplayName("Взять все заметки")
+    @DisplayName("Retrieve all notes")
     @Tag("api")
     @Tag("regression")
     void retrieveListOfNotes() {
@@ -37,55 +35,48 @@ public class NotesApiTests extends MethodsNotesApi {
     }
 
     @Test
-    @DisplayName("Создание и получение заметки по ID")
+    @DisplayName("Create and get note by ID")
     @Tag("api")
     @Tag("smoke")
     @Tag("regression")
     void createAndGetNoteById() {
-
-
         createNote(note);
         getNoteByIdAndVerify(note);
     }
 
     @Test
-    @DisplayName("Обновление заметки по ID")
+    @DisplayName("Update note by ID")
     @Tag("api")
     @Tag("regression")
     void updateNote() {
-
-
         createNote(note);
         updateNoteById(note);
     }
 
     @Test
-    @DisplayName("Обновление статуса Completed")
+    @DisplayName("Update note 'Completed' status")
     @Tag("api")
     @Tag("regression")
     void completedUpdate() {
         createNote(note);
-
         updateCompletedStatus(note);
     }
 
-
     @Test
-    @DisplayName("Удаление заметки по Id")
-
+    @DisplayName("Delete note by ID")
     @Tag("api")
     @Tag("smoke")
     void deleteNote() {
-
         createNote(note);
         deleteNoteById(note);
     }
 
+    // 🧪 Negative scenarios
 
     @Test
     @Tag("api")
     @Tag("negative")
-    @DisplayName("Создание заметки без токена")
+    @DisplayName("Create note without token")
     void createNoteWithoutToken() {
         createNoteWithoutTokenMethod();
     }
@@ -93,7 +84,7 @@ public class NotesApiTests extends MethodsNotesApi {
     @Test
     @Tag("api")
     @Tag("negative")
-    @DisplayName("Создание заметки с пустым title")
+    @DisplayName("Create note with empty title")
     void createNoteWithEmptyTitle() {
         createNoteWithEmptyTitleMethod();
     }
@@ -101,7 +92,7 @@ public class NotesApiTests extends MethodsNotesApi {
     @Test
     @Tag("api")
     @Tag("negative")
-    @DisplayName("Создание заметки с title < 4 символов")
+    @DisplayName("Create note with title shorter than 4 characters")
     void createNoteWithShortTitle() {
         createNoteWithShortTitleMethod();
     }
@@ -109,16 +100,15 @@ public class NotesApiTests extends MethodsNotesApi {
     @Test
     @Tag("api")
     @Tag("negative")
-    @DisplayName("Создание заметки с title > 100 символов")
+    @DisplayName("Create note with title longer than 100 characters")
     void createNoteWithLongTitle() {
         createNoteWithLongTitleMethod();
     }
 
-
     @Test
     @Tag("api")
     @Tag("negative")
-    @DisplayName("Создание заметки с неизвестной категорией")
+    @DisplayName("Create note with unknown category")
     void createNoteWithInvalidCategory() {
         createNoteWithUnknownCategoryMethod();
     }
@@ -126,25 +116,23 @@ public class NotesApiTests extends MethodsNotesApi {
     @Test
     @Tag("api")
     @Tag("negative")
-    @DisplayName("Обновление несуществующей заметки")
+    @DisplayName("Update nonexistent note")
     void updateNonexistentNote() {
         updateUnrealNote();
-
     }
 
     @Test
     @Tag("api")
     @Tag("negative")
-    @DisplayName("Удаление чужой заметки")
+    @DisplayName("Delete note owned by another user")
     void deleteNoteOfAnotherUser() {
         deleteInvalidNotes();
     }
 
-
     @Test
     @Tag("api")
     @Tag("negative")
-    @DisplayName("Обновление заметки без тела запроса")
+    @DisplayName("Update note with empty request body")
     void updateNoteWithEmptyBody() {
         createNote(note);
         updateNoteWithoutBody(note);
@@ -153,14 +141,8 @@ public class NotesApiTests extends MethodsNotesApi {
     @Test
     @Tag("api")
     @Tag("negative")
-    @DisplayName("Создание заметки с некорректным Content-Type")
+    @DisplayName("Create note with incorrect Content-Type")
     void createNoteWithInvalidContentType() {
         createNoteWithInvalidContentTypeMethod();
     }
-
-
-
-
-
-    }
-
+}

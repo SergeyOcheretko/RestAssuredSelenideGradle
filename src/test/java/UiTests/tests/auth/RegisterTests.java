@@ -1,7 +1,6 @@
 package UiTests.tests.auth;
 
 import UiTests.base.UiBaseTest;
-import UiTests.generator.SimpleAsciiDisplayNameGenerator;
 import UiTests.pages.auth.RegisterPage;
 import UiTests.utils.FlashMessage;
 import UiTests.utils.TestConfig;
@@ -13,15 +12,13 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.stream.Stream;
 
-@Epic("Аутентификация")
-@Feature("Регистрация")
+@Epic("Authentication")
+@Feature("Registration")
 @Owner("SergeyQA")
 @Tag("ui")
-@DisplayNameGeneration(SimpleAsciiDisplayNameGenerator.class)
 public class RegisterTests extends UiBaseTest {
 
     private static final String DUMMY_PASSWORD = TestConfig.validPassword();
@@ -31,11 +28,10 @@ public class RegisterTests extends UiBaseTest {
         return "user" + registerPage.createRandomUsername();
     }
 
-
     @Test
-    @Story("Обычный username")
+    @Story("Regular username")
     @Severity(SeverityLevel.CRITICAL)
-    @DisplayName("Регистрация с обычным username")
+    @DisplayName("Register with standard username")
     void registerWithRegularUsername() {
         String username = "user" + new Faker().regexify("[A-Za-z]{5}");
         registerPage.open();
@@ -46,12 +42,11 @@ public class RegisterTests extends UiBaseTest {
     }
 
     @Test
-    @Story("Граничный username — минимум")
+    @Story("Username boundary — min")
     @Severity(SeverityLevel.NORMAL)
-    @DisplayName("Регистрация с username из 3 символов")
+    @DisplayName("Register with 3-character username")
     void registerWithThreeCharUsername() {
-        Faker faker = new Faker();
-     String  username = faker.regexify("[A-Za-z]{3}");
+        String username = new Faker().regexify("[A-Za-z]{3}");
         registerPage.open();
         registerPage.fillRegistrationForm(username, DUMMY_PASSWORD, DUMMY_PASSWORD);
         registerPage.submit();
@@ -60,9 +55,9 @@ public class RegisterTests extends UiBaseTest {
     }
 
     @Test
-    @Story("Граничный username — максимум")
+    @Story("Username boundary — max")
     @Severity(SeverityLevel.NORMAL)
-    @DisplayName("Регистрация с username из 39 символов")
+    @DisplayName("Register with 39-character username")
     void registerWithMaxLengthUsername() {
         String username = new Faker().regexify("[A-Za-z]{39}");
         registerPage.open();
@@ -73,9 +68,9 @@ public class RegisterTests extends UiBaseTest {
     }
 
     @Test
-    @Story("Регистрация с повторным username")
+    @Story("Duplicate username")
     @Severity(SeverityLevel.CRITICAL)
-    @DisplayName("Регистрация с уже существующим username")
+    @DisplayName("Register with already existing username")
     void shouldRejectDuplicateUsername() {
         String uniqueUser = generateUniqueUsername();
 
@@ -94,9 +89,9 @@ public class RegisterTests extends UiBaseTest {
 
     @ParameterizedTest(name = "{0}")
     @MethodSource("negativeCasesProvider")
-    @Story("Негативные кейсы")
+    @Story("Negative cases")
     @Severity(SeverityLevel.NORMAL)
-    @DisplayName("Проверка ошибок при регистрации")
+    @DisplayName("Validation errors during registration")
     void negativeRegistration(String description,
                               String username,
                               String password,
@@ -109,7 +104,7 @@ public class RegisterTests extends UiBaseTest {
 
         SoftAssertions softly = new SoftAssertions();
         softly.assertThat(registerPage.getFlashMessage())
-                .as("Кейс: %s", description)
+                .as("Case: %s", description)
                 .containsIgnoringCase(expectedMessage);
         softly.assertAll();
     }
@@ -118,24 +113,23 @@ public class RegisterTests extends UiBaseTest {
         Faker faker = new Faker();
         final String validPass = "Qwerty123!";
         return Stream.of(
-                Arguments.of("Пустой username", "", validPass, validPass, "All fields are required"),
-                Arguments.of("Пустой пароль", "john", "", "", "All fields are required"),
-                Arguments.of("Пароли не совпадают", "john", "fort", "Qwerty123!", "Passwords do not match."),
-                Arguments.of("Username < 3 символов", "ab", validPass, validPass, "Username must be at least 3 characters"),
-                Arguments.of("Username > 39 символов", faker.regexify("[A-Za-z]{40}"), validPass, validPass, "must be between 3 and 39 characters"),
-                Arguments.of("Username с пробелом", "john doe", validPass, validPass, "Invalid username"),
-                Arguments.of("Username со спецсимволами", "john@#$", validPass, validPass, "Invalid username"),
-                Arguments.of("Пароль короче 4 символов", "john", "123", "123", "Password must be at least 4 characters"),
-                Arguments.of("SQL-инъекция в username", "' OR 1=1--", validPass, validPass, "Invalid username"),
-                Arguments.of("XSS в username", "<script>alert(1)</script>", validPass, validPass, "Invalid username"),
-                Arguments.of("Пароль 40 символов", "john", "Aa1!".repeat(40), "Aa1!".repeat(40), "An error occurred during registration. Please try again."),
-                Arguments.of("Username начинается с пробела", " jonh", validPass, validPass, "cannot start or end with a hyphen."),
-                Arguments.of("Username заканчивается с пробелом", "jonh ", validPass, validPass, "cannot start or end with a hyphen."),
-                Arguments.of("Username только заглавными буквами", "JOHN ", validPass, validPass, "cannot start or end with a hyphen."),
-                Arguments.of("Пароль без цифры", "john", "NoDigits!", "NoDigits!", "An error occurred during registration. Please try again."),
-                Arguments.of("Username только цифры", "12345", validPass, validPass, "An error occurred during registration. Please try again."),
-                Arguments.of("Email вместо Username", "WEDIID@gmail.com", validPass, validPass, "Invalid username")
+                Arguments.of("Empty username", "", validPass, validPass, "All fields are required"),
+                Arguments.of("Empty password", "john", "", "", "All fields are required"),
+                Arguments.of("Passwords do not match", "john", "fort", "Qwerty123!", "Passwords do not match."),
+                Arguments.of("Username < 3 characters", "ab", validPass, validPass, "Username must be at least 3 characters"),
+                Arguments.of("Username > 39 characters", faker.regexify("[A-Za-z]{40}"), validPass, validPass, "must be between 3 and 39 characters"),
+                Arguments.of("Username with space", "john doe", validPass, validPass, "Invalid username"),
+                Arguments.of("Username with special characters", "john@#$", validPass, validPass, "Invalid username"),
+                Arguments.of("Password shorter than 4 characters", "john", "123", "123", "Password must be at least 4 characters"),
+                Arguments.of("SQL injection attempt in username", "' OR 1=1--", validPass, validPass, "Invalid username"),
+                Arguments.of("XSS attempt in username", "<script>alert(1)</script>", validPass, validPass, "Invalid username"),
+                Arguments.of("Password length 40 characters", "john", "Aa1!".repeat(40), "Aa1!".repeat(40), "An error occurred during registration. Please try again."),
+                Arguments.of("Username starts with space", " jonh", validPass, validPass, "cannot start or end with a hyphen."),
+                Arguments.of("Username ends with space", "jonh ", validPass, validPass, "cannot start or end with a hyphen."),
+                Arguments.of("Username in uppercase only", "JOHN ", validPass, validPass, "cannot start or end with a hyphen."),
+                Arguments.of("Password without digit", "john", "NoDigits!", "NoDigits!", "An error occurred during registration. Please try again."),
+                Arguments.of("Username with only digits", "12345", validPass, validPass, "An error occurred during registration. Please try again."),
+                Arguments.of("Email instead of username", "WEDIID@gmail.com", validPass, validPass, "Invalid username")
         );
     }
-
 }
