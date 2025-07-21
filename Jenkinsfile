@@ -17,13 +17,17 @@ pipeline {
 
         stage('UI Tests') {
             steps {
-                echo '🧪 Запускаем UI тесты...'
+                echo '🧹 Очищаем allure-results...'
+                       bat 'del /q build\\allure-results\\*'
+               echo '🧪 Запускаем UI тесты...'
                 bat 'call .\\gradlew uiTest --console=plain --no-daemon --gradle-user-home=%GRADLE_USER_HOME%'
             }
         }
 
         stage('API Tests') {
             steps {
+                echo '🧹 Очищаем allure-results...'
+                       bat 'del /q build\\allure-results\\*'
                 echo '🌐 Запускаем API тесты...'
                 bat 'call .\\gradlew apiTest --console=plain --no-daemon --gradle-user-home=%GRADLE_USER_HOME%'
             }
@@ -31,6 +35,8 @@ pipeline {
 
         stage('Smoke Tests') {
             steps {
+                 echo '🧹 Очищаем allure-results...'
+                        bat 'del /q build\\allure-results\\*'
                 echo '🚬 Smoke-прогон...'
                 bat 'call .\\gradlew smokeTest --console=plain --no-daemon --gradle-user-home=%GRADLE_USER_HOME%'
             }
@@ -38,6 +44,8 @@ pipeline {
 
         stage('Regression Tests') {
             steps {
+                 echo '🧹 Очищаем allure-results...'
+                        bat 'del /q build\\allure-results\\*'
                 echo '🔁 Regression-прогон...'
                 bat 'call .\\gradlew regressionTest --console=plain --no-daemon --gradle-user-home=%GRADLE_USER_HOME%'
             }
