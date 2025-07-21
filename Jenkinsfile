@@ -50,7 +50,7 @@ pipeline {
                 echo '🔁 Regression-прогон...'
                 bat '''
                     chcp 65001
-                    gradlew clean test -DincludeTags=regression --console=plain --no-daemon --gradle-user-home=%GRADLE_USER_HOME%
+                    gradlew test -DincludeTags=api --console=plain --no-daemon --gradle-user-home=%GRADLE_USER_HOME%
                 '''
             }
         }
