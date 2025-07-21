@@ -19,8 +19,11 @@ pipeline {
                 echo '🧹 Выполняем gradle clean...'
                 bat 'call .\\gradlew clean --no-daemon --gradle-user-home=%GRADLE_USER_HOME%'
                 echo '🧹 Очищаем allure-results...'
-                bat 'del /q build\\allure-results\\*'
-            }
+bat '''
+if exist build\\allure-results (
+    del /q build\\allure-results\\*
+)
+'''            }
         }
 
         stage('UI Tests') {
