@@ -17,15 +17,8 @@ java {
 
 dependencies {
     // JUnit Jupiter
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.2'
-    testImplementation 'org.junit.jupiter:junit-jupiter-params:5.10.3'
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.2'
-
-    // JUnit Platform
-    testImplementation 'org.junit.platform:junit-platform-launcher:1.10.3'
-    testImplementation 'org.junit.platform:junit-platform-suite:1.10.0'
-    testImplementation 'org.junit.platform:junit-platform-suite-engine:1.10.0'
-    testRuntimeOnly 'org.junit.platform:junit-platform-suite-engine:1.10.0'
 
     // Test tools
     testImplementation 'com.codeborne:selenide:6.19.1'
@@ -37,7 +30,7 @@ dependencies {
     testImplementation 'com.fasterxml.jackson.core:jackson-databind:2.17.1'
     testImplementation 'org.assertj:assertj-core:3.26.0'
     testImplementation 'io.github.bonigarcia:webdrivermanager:5.9.2'
-
+    testImplementation 'org.junit.platform:junit-platform-suite:1.10.0'
     // Allure
     testImplementation 'io.qameta.allure:allure-junit5:2.25.0'
 }
@@ -50,42 +43,51 @@ allure {
 }
 
 tasks.withType(Test).configureEach {
-    useJUnitPlatform {
-        def includeProp = System.getProperty("includeTags")
-        if (includeProp) {
-            includeTags(*(includeProp.split(",") as String[]))
-        }
-
-        def excludeProp = System.getProperty("excludeTags")
-        if (excludeProp) {
-            excludeTags(*(excludeProp.split(",") as String[]))
-        }
-    }
-
+    useJUnitPlatform()
     testLogging {
         events "passed", "failed", "skipped"
         exceptionFormat "short"
     }
-
     systemProperty "selenide.logging", "false"
     outputs.upToDateWhen { false }
+    // Поддержка запуска по тегам через -DincludeTags и -DexcludeTags
+    doFirst {
+        def includeProp = System.getProperty("includeTags")
+        if (includeProp) {
+            useJUnitPlatform {
+                includeTags(*(includeProp.split(",") as String[]))
+            }
+        }
+        def excludeProp = System.getProperty("excludeTags")
+        if (excludeProp) {
+            useJUnitPlatform {
+                excludeTags(*(excludeProp.split(",") as String[]))
+            }
+        }
+    }
 }
 
+// Кастомные задачи для разных прогонов по тегам
 tasks.register("smokeTest", Test) {
+    description = "Run only smoke-tagged tests"
+    group = "verification"
     useJUnitPlatform {
         includeTags "smoke"
     }
 }
 
 tasks.register("regressionTest", Test) {
+    description = "Run only regression-tagged tests"
+    group = "verification"
     useJUnitPlatform {
         includeTags "regression"
     }
 }
 
 tasks.register("apiTest", Test) {
+    description = "Run only api-tagged tests"
+    group = "verification"
     useJUnitPlatform {
         includeTags "api"
     }
 }
-
