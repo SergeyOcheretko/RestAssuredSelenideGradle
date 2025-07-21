@@ -28,10 +28,11 @@ pipeline {
         stage('API Tests') {
             steps {
                 echo '🌐 Запускаем API тесты...'
-                bat '''
-                    chcp 65001
-                    gradlew test -DincludeTags=api --no-daemon --gradle-user-home=%GRADLE_USER_HOME%
-                '''
+              bat '''
+                  chcp 65001
+                  gradlew test --tests UiTests.ApiRunner.ApiRunner --no-daemon --gradle-user-home=%GRADLE_USER_HOME%
+              '''
+
             }
         }
 
@@ -40,7 +41,7 @@ pipeline {
                 echo '🚬 Smoke-прогон...'
                 bat '''
                     chcp 65001
-                    gradlew smokeTest --no-daemon --gradle-user-home=%GRADLE_USER_HOME%
+                   gradlew clean test -DincludeTags=smoke --no-daemon --gradle-user-home=%GRADLE_USER_HOME%
                 '''
             }
         }
@@ -50,7 +51,7 @@ pipeline {
                 echo '🔁 Regression-прогон...'
                 bat '''
                     chcp 65001
-                    gradlew regressionTest --no-daemon --gradle-user-home=%GRADLE_USER_HOME%
+                    ggradlew clean test -DincludeTags=regression --no-daemon --gradle-user-home=%GRADLE_USER_HOME%
                 '''
             }
         }
