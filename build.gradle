@@ -45,39 +45,42 @@ allure {
     }
 }
 
-tasks.withType(Test) {
+tasks.withType(Test).configureEach {
     useJUnitPlatform()
 
     def excludeProp = System.getProperty('excludeTags')
     if (excludeProp) {
-        def excludes = excludeProp.split(',') as String[]
         filter {
-            excludeTags(*excludes)
+            excludeTags(*excludeProp.split(','))
         }
     }
 
+    systemProperty "selenide.logging", "false"
+
     testLogging {
-        events "started", "passed", "skipped", "failed"
-        exceptionFormat "full"
-        showStandardStreams = true
+        events "started", "passed", "failed", "skipped"
+        exceptionFormat "short"
+        showStandardStreams = false
     }
 
     outputs.upToDateWhen { false }
 
-    doLast {
-        println "✅ Тесты завершены. Лог смотри в build/test-results/test/"
+}
+
+tasks.register("smokeTest", Test) {
+    useJUnitPlatform {
+        includeTags "smoke"
     }
 }
 
-
-tasks.register("smokeTest", Test) {
-    useJUnitPlatform { includeTags "smoke" }
-}
-
 tasks.register("regressionTest", Test) {
-    useJUnitPlatform { includeTags "regression" }
+    useJUnitPlatform {
+        includeTags "regression"
+    }
 }
 
 tasks.register("apiTest", Test) {
-    useJUnitPlatform { includeTags "api" }
+    useJUnitPlatform {
+        includeTags "api"
+    }
 }
