@@ -19,9 +19,9 @@ jobs:
 
       - name: 🧹 Clean build + clear allure-results
         run: |
-          ./gradlew clean --no-daemon --gradle-user-home=%GRADLE_USER_HOME%
-          mkdir build\allure-results
-          del /q build\allure-results\*
+          ./gradlew clean --no-daemon --gradle-user-home=$env:GRADLE_USER_HOME
+          Remove-Item -Path "build\allure-results" -Recurse -Force -ErrorAction SilentlyContinue
+          New-Item -ItemType Directory -Path "build\allure-results" -Force
 
       - name: 🧪 Run UI tests
         run: ./gradlew uiTest --console=plain --no-daemon --gradle-user-home=%GRADLE_USER_HOME%
