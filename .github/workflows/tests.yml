@@ -48,13 +48,13 @@ jobs:
         run: ./gradlew allureReport --console=plain --no-daemon --gradle-user-home=%GRADLE_USER_HOME%
 
       - name: 📤 Upload Allure HTML
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: allure-report
           path: build/allure-report
 
       - name: 📦 Archive JUnit results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: junit-results
           path: '**/build/test-results/test/*.xml'
