@@ -45,24 +45,29 @@ stage('Inject Allure Categories') {
         writeFile file: 'build/allure-results/categories.json', text: '''
         [
           {
-            "name": "Authorization Failure",
+            "name": "Registration Error",
             "matchedStatuses": ["failed"],
-            "matchedMessageRegex": ".*401 Unauthorized.*|.*Access denied.*|.*token.*expired.*|.*unauthenticated.*"
+            "matchedMessageRegex": ".*Username.*must be at least.*|.*cannot start or end with a hyphen.*|.*Password.*too short.*|.*Registration.*failed.*"
+          },
+          {
+            "name": "Login Error",
+            "matchedStatuses": ["failed"],
+            "matchedMessageRegex": ".*Login.*failed.*|.*incorrect password.*|.*user not found.*|.*unauthorized.*"
+          },
+          {
+            "name": "Note Operation Error",
+            "matchedStatuses": ["failed"],
+            "matchedMessageRegex": ".*note.*does not exist.*|.*invalid category.*|.*forbidden.*|.*Note creation failed.*"
           },
           {
             "name": "Validation Error",
             "matchedStatuses": ["failed"],
-            "matchedMessageRegex": ".*invalid.*|.*must be at least.*|.*required.*|.*Passwords do not match.*|.*cannot start or end with.*|.*Email.*not valid.*"
+            "matchedMessageRegex": ".*is invalid.*|.*must be at least.*|.*required field.*|.*format is incorrect.*"
           },
           {
             "name": "Duplicate Data",
             "matchedStatuses": ["failed"],
-            "matchedMessageRegex": ".*already exists.*|.*duplicate.*"
-          },
-          {
-            "name": "Server Error",
-            "matchedStatuses": ["broken"],
-            "matchedMessageRegex": ".*500 Internal Server Error.*|.*unexpected error.*|.*exception.*"
+            "matchedMessageRegex": ".*already exists.*|.*duplicate.*|.*conflict.*"
           },
           {
             "name": "Empty Request",
@@ -72,19 +77,25 @@ stage('Inject Allure Categories') {
           {
             "name": "Content-Type Mismatch",
             "matchedStatuses": ["failed"],
-            "matchedMessageRegex": ".*unsupported media type.*|.*Content-Type.*not allowed.*"
+            "matchedMessageRegex": ".*unsupported media type.*|.*Content-Type.*not allowed.*|.*header mismatch.*"
+          },
+          {
+            "name": "Authorization Failure",
+            "matchedStatuses": ["failed"],
+            "matchedMessageRegex": ".*401 Unauthorized.*|.*Access denied.*|.*expired token.*|.*unauthenticated.*"
           },
           {
             "name": "UI Assertion Mismatch",
             "matchedStatuses": ["failed"],
-            "matchedMessageRegex": ".*expected.*but was.*|.*element not found.*|.*FlashMessage.*"
+            "matchedMessageRegex": ".*expected.*but was.*|.*element not found.*|.*FlashMessage.*|.*invalid label.*"
           },
           {
-            "name": "Note Access Violation",
-            "matchedStatuses": ["failed"],
-            "matchedMessageRegex": ".*note.*belongs to another user.*|.*forbidden.*"
+            "name": "Server Error",
+            "matchedStatuses": ["broken"],
+            "matchedMessageRegex": ".*500 Internal Server Error.*|.*unexpected error.*|.*exception.*|.*service unavailable.*"
           }
         ]
+
         '''.stripIndent()
     }
 }
