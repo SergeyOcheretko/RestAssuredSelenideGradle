@@ -48,7 +48,7 @@ jobs:
         run: ./gradlew allureReport --console=plain --no-daemon --gradle-user-home=%GRADLE_USER_HOME%
 
       - name: 📤 Upload Allure HTML
-        uses: actions/upload-artifact@v4
+uses: actions/upload-artifact@v4.3.1
         with:
           name: allure-report
           path: build/allure-report
