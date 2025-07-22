@@ -4,9 +4,11 @@ on:
   push:
     branches: [ main, develop ]
   workflow_dispatch:
+
 jobs:
   test:
     runs-on: windows-latest
+
     env:
       JAVA_TOOL_OPTIONS: -Dfile.encoding=UTF-8
       GRADLE_USER_HOME: C:\temp\gradle-cache
