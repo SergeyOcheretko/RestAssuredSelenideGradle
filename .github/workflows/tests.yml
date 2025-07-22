@@ -1,3 +1,9 @@
+name: CI — UI & API Tests with Allure
+
+on:
+  push:
+    branches: [ main, develop ]
+  workflow_dispatch:
 jobs:
   test:
     runs-on: windows-latest
