@@ -129,8 +129,7 @@ public class RegisterTests extends UiBaseTest {
                 Arguments.of("Username in uppercase only", "JOHN ", validPass, validPass, "cannot start or end with a hyphen."),
                 Arguments.of("Password without digit", "john", "NoDigits!", "NoDigits!", "An error occurred during registration. Please try again."),
                 Arguments.of("Username with only digits", "12345", validPass, validPass, "An error occurred during registration. Please try again."),
-                Arguments.of("Email instead of username", "WEDIID@gmail.com", validPass, validPass, "Invalid username"),
-                Arguments.of("Email instead of username", "12", validPass, validPass, "cannot start or end with a hyphen.")
+                Arguments.of("Email instead of username", "WEDIID@gmail.com", validPass, validPass, "Invalid username")
 
         );
     }

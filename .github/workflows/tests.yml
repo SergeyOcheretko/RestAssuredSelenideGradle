@@ -1,0 +1,60 @@
+name: CI — UI & API Tests with Allure
+
+on:
+  push:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: windows-latest
+
+    env:
+      JAVA_TOOL_OPTIONS: -Dfile.encoding=UTF-8
+      GRADLE_USER_HOME: C:\temp\gradle-cache
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v3
+
+      - name: 🧹 Clean build + clear allure-results
+        run: |
+          ./gradlew clean --no-daemon --gradle-user-home=%GRADLE_USER_HOME%
+          mkdir build\allure-results
+          del /q build\allure-results\*
+
+      - name: 🧪 Run UI tests
+        run: ./gradlew uiTest --console=plain --no-daemon --gradle-user-home=%GRADLE_USER_HOME%
+
+      - name: 🌐 Run API tests
+        run: ./gradlew apiTest --console=plain --no-daemon --gradle-user-home=%GRADLE_USER_HOME%
+
+      - name: 🧩 Inject categories.json for Allure
+        run: |
+          echo [ > build/allure-results/categories.json
+          echo   { "name": "Registration Error", "matchedStatuses": ["failed"], "matchedMessageRegex": ".*Username.*must be at least.*|.*cannot start or end with a hyphen.*|.*Password.*too short.*|.*Registration.*failed.*" }, >> build/allure-results/categories.json
+          echo   { "name": "Login Error", "matchedStatuses": ["failed"], "matchedMessageRegex": ".*Login.*failed.*|.*incorrect password.*|.*user not found.*|.*unauthorized.*" }, >> build/allure-results/categories.json
+          echo   { "name": "Note Operation Error", "matchedStatuses": ["failed"], "matchedMessageRegex": ".*note.*does not exist.*|.*invalid category.*|.*forbidden.*|.*Note creation failed.*" }, >> build/allure-results/categories.json
+          echo   { "name": "Validation Error", "matchedStatuses": ["failed"], "matchedMessageRegex": ".*is invalid.*|.*must be at least.*|.*required field.*|.*format is incorrect.*" }, >> build/allure-results/categories.json
+          echo   { "name": "Duplicate Data", "matchedStatuses": ["failed"], "matchedMessageRegex": ".*already exists.*|.*duplicate.*|.*conflict.*" }, >> build/allure-results/categories.json
+          echo   { "name": "Empty Request", "matchedStatuses": ["failed"], "matchedMessageRegex": ".*empty body.*|.*missing fields.*|.*no content.*" }, >> build/allure-results/categories.json
+          echo   { "name": "Content-Type Mismatch", "matchedStatuses": ["failed"], "matchedMessageRegex": ".*unsupported media type.*|.*Content-Type.*not allowed.*|.*header mismatch.*" }, >> build/allure-results/categories.json
+          echo   { "name": "Authorization Failure", "matchedStatuses": ["failed"], "matchedMessageRegex": ".*401 Unauthorized.*|.*Access denied.*|.*expired token.*|.*unauthenticated.*" }, >> build/allure-results/categories.json
+          echo   { "name": "UI Assertion Mismatch", "matchedStatuses": ["failed"], "matchedMessageRegex": ".*expected.*but was.*|.*element not found.*|.*FlashMessage.*|.*invalid label.*" }, >> build/allure-results/categories.json
+          echo   { "name": "Server Error", "matchedStatuses": ["broken"], "matchedMessageRegex": ".*500 Internal Server Error.*|.*unexpected error.*|.*exception.*|.*service unavailable.*" } >> build/allure-results/categories.json
+          echo ] >> build/allure-results/categories.json
+
+      - name: 📊 Generate Allure report
+        run: ./gradlew allureReport --console=plain --no-daemon --gradle-user-home=%GRADLE_USER_HOME%
+
+      - name: 📤 Upload Allure HTML
+        uses: actions/upload-artifact@v3
+        with:
+          name: allure-report
+          path: build/allure-report
+
+      - name: 📦 Archive JUnit results
+        uses: actions/upload-artifact@v3
+        with:
+          name: junit-results
+          path: '**/build/test-results/test/*.xml'
