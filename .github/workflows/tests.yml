@@ -63,10 +63,11 @@ jobs:
         uses: actions/upload-artifact@v4.3.1
         with:
           name: allure-report
-          path: build/allure-report
+          path: build/reports/allure-report/allureReport
 
       - name: 📦 Archive JUnit results
         uses: actions/upload-artifact@v4
         with:
           name: junit-results
-          path: '**/build/test-results/test/*.xml'
+          path: |
+            **/test-results/**/*.xml
