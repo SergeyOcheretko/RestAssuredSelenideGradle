@@ -55,9 +55,16 @@ jobs:
             { "name": "Server Error",         "matchedStatuses": ["broken"],"matchedMessageRegex": ".*500 Internal Server Error.*|.*unexpected error.*|.*exception.*|.*service unavailable.*" }
           ]
           "@ | Out-File -FilePath "build\allure-results\categories.json" -Encoding utf8NoBOM
-
       - name: 📊 Generate Allure report
         run: ./gradlew allureReport --console=plain --no-daemon --gradle-user-home=%GRADLE_USER_HOME%
+
+      - name: 🚀 Deploy to GitHub Pages
+        if: always()
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: build/reports/allure-report/allureReport
+          destination_dir: allure-report/${{ github.run_number }}
 
       - name: 📤 Upload Allure HTML
         uses: actions/upload-artifact@v4.3.1
