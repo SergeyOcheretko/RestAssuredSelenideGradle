@@ -39,6 +39,55 @@ if exist build\\allure-results (
                 bat(script: 'call .\\gradlew apiTest --console=plain --no-daemon --gradle-user-home=%GRADLE_USER_HOME%', returnStatus: true)
             }
         }
+stage('Inject Allure Categories') {
+    steps {
+        echo '🧩 Подключаем categories.json для Allure...'
+        writeFile file: 'build/allure-results/categories.json', text: '''
+        [
+          {
+            "name": "Authorization Failure",
+            "matchedStatuses": ["failed"],
+            "matchedMessageRegex": ".*401 Unauthorized.*|.*Access denied.*|.*token.*expired.*|.*unauthenticated.*"
+          },
+          {
+            "name": "Validation Error",
+            "matchedStatuses": ["failed"],
+            "matchedMessageRegex": ".*invalid.*|.*must be at least.*|.*required.*|.*Passwords do not match.*|.*cannot start or end with.*|.*Email.*not valid.*"
+          },
+          {
+            "name": "Duplicate Data",
+            "matchedStatuses": ["failed"],
+            "matchedMessageRegex": ".*already exists.*|.*duplicate.*"
+          },
+          {
+            "name": "Server Error",
+            "matchedStatuses": ["broken"],
+            "matchedMessageRegex": ".*500 Internal Server Error.*|.*unexpected error.*|.*exception.*"
+          },
+          {
+            "name": "Empty Request",
+            "matchedStatuses": ["failed"],
+            "matchedMessageRegex": ".*empty body.*|.*missing fields.*|.*no content.*"
+          },
+          {
+            "name": "Content-Type Mismatch",
+            "matchedStatuses": ["failed"],
+            "matchedMessageRegex": ".*unsupported media type.*|.*Content-Type.*not allowed.*"
+          },
+          {
+            "name": "UI Assertion Mismatch",
+            "matchedStatuses": ["failed"],
+            "matchedMessageRegex": ".*expected.*but was.*|.*element not found.*|.*FlashMessage.*"
+          },
+          {
+            "name": "Note Access Violation",
+            "matchedStatuses": ["failed"],
+            "matchedMessageRegex": ".*note.*belongs to another user.*|.*forbidden.*"
+          }
+        ]
+        '''.stripIndent()
+    }
+}
 
         stage('Allure Report') {
             steps {

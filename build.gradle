@@ -92,4 +92,12 @@ tasks.register("apiTest", Test) {
     exclude '**/UiRunner.class'
     exclude '**/ApiRunner.class'
 }
+tasks.withType(Test).configureEach {
+    doFirst {
+        copy {
+            from 'src/test/resources/categories.json'
+            into "$buildDir/allure-results"
+        }
+    }
+}
 
