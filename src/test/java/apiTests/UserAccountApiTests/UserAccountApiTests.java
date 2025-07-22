@@ -14,7 +14,6 @@ public class UserAccountApiTests extends MethodsUserAccountApi {
     @Test
     @Tag("smoke")
     @DisplayName("Check API server health")
-    @Order(1)
     void checkApiServerHealth() {
         checkApiHealth();
     }
@@ -22,7 +21,6 @@ public class UserAccountApiTests extends MethodsUserAccountApi {
     @Test
     @Tag("smoke")
     @DisplayName("Login and save token")
-    @Order(2)
     void checkLoginAndSaveToken() {
         loginAndExtractUserData(user);
     }
@@ -30,14 +28,12 @@ public class UserAccountApiTests extends MethodsUserAccountApi {
     @Test
     @Tag("smoke")
     @DisplayName("Profile returns correct data for authorized user")
-    @Order(3)
     void getProfile_shouldReturnCorrectData() {
         verifyBasicProfile(user);
     }
 
     @Test
     @DisplayName("Profile update succeeds")
-    @Order(4)
     void updateProfile_shouldSucceed() {
         verifyUserProfile(user);
     }
@@ -45,14 +41,12 @@ public class UserAccountApiTests extends MethodsUserAccountApi {
     @Test
     @Tag("smoke")
     @DisplayName("Reset password using valid email")
-    @Order(5)
     void resetPasswordViaValidEmail() {
         verifyResetPassword(user);
     }
 
     @Test
     @DisplayName("Password reset works with mock token (simulation)")
-    @Order(6)
     void resetPassword_withMockToken_shouldReturnResponse() {
         verifyResetPassword(user);
     }
@@ -60,7 +54,6 @@ public class UserAccountApiTests extends MethodsUserAccountApi {
     @Test
     @Tag("smoke")
     @DisplayName("Change password")
-    @Order(7)
     void changePassword() {
         changePassword(user);
     }
@@ -68,7 +61,6 @@ public class UserAccountApiTests extends MethodsUserAccountApi {
     @Test
     @Tag("smoke")
     @DisplayName("Logout from system")
-    @Order(8)
     void logoutSystem() {
         logout(user);
     }
@@ -76,7 +68,6 @@ public class UserAccountApiTests extends MethodsUserAccountApi {
     @Test
     @Tag("smoke")
     @DisplayName("Delete test account")
-    @Order(9)
     void deleteTestAccount() {
         deleteAccount(user);
     }
