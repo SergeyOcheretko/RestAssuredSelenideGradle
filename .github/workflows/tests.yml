@@ -64,7 +64,6 @@ jobs:
         with:
           personal_token: ${{ secrets.GH_PAGES_TOKEN }}
           publish_dir: build/reports/allure-report/allureReport
-          destination_dir: allure-report/${{ github.run_number }}
 
       - name: 📤 Upload Allure HTML
         uses: actions/upload-artifact@v4.3.1
