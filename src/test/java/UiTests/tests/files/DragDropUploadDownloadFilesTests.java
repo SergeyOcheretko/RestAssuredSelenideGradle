@@ -4,14 +4,21 @@ import UiTests.base.UiBaseTest;
 import UiTests.pages.files.DragDropUploadDownloadFilesPage;
 import UiTests.utils.FlashMessage;
 import com.codeborne.selenide.WebDriverRunner;
+import io.qameta.allure.Epic;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Owner;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 
 import static com.codeborne.selenide.Selenide.$;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-
+@Epic("Files")
+@Feature("Work with files")
+@Owner("SergeyQA")
+@Tag("ui")
 public class DragDropUploadDownloadFilesTests extends UiBaseTest {
 
 
