@@ -104,7 +104,7 @@ public class LoginTests extends UiBaseTest {
     @Severity(SeverityLevel.MINOR)
     @DisplayName("Successful logout after login")
     void checkLogout() {
-        String username = new Faker().regexify("[A-Za-z]{3}");
+        String username = new Faker().regexify("[A-Za-z]{5}");
         String password = DUMMY_PASSWORD;
 
         registerPage.open();
