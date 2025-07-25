@@ -124,7 +124,7 @@ public class DragDropUploadDownloadFilesTests extends UiBaseTest {
 
         File PDF = dragDropUploadDownloadFilesPage.downloadPDFFile();
         assertThat(PDF).exists();
-        assertThat(PDF.getName()).isEqualTo("1753426913424_WPS+PDF+Quick+Start+Guide.pdf");
+        assertThat(PDF.getName()).isEqualTo("1753440191774_test-file.pdf");
 
     }
 }

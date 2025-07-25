@@ -131,7 +131,7 @@ public File downloadJPGFile() throws FileNotFoundException {
     }
     public File downloadPDFFile() throws FileNotFoundException {
         SelenideElement link = $$("a")
-                .findBy(Condition.text("1753426913424_WPS PDF Quick Start Guide.pdf"))
+                .findBy(Condition.text("1753440191774_test-file.pdf"))
                 .shouldBe(Condition.visible);
 
         return link.download();
