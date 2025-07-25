@@ -10,11 +10,14 @@ import io.qameta.allure.Owner;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.openqa.selenium.json.Json;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 
-import static com.codeborne.selenide.Selenide.$;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+
 @Epic("Files")
 @Feature("Work with files")
 @Owner("SergeyQA")
@@ -73,5 +76,55 @@ public class DragDropUploadDownloadFilesTests extends UiBaseTest {
         dragDropUploadDownloadFilesPage.cancelUploadingByEsc();
     }
 
+@Test
+    @DisplayName("Download JPG file")
+    void checkDownloadJpgFile() throws FileNotFoundException {
+        dragDropUploadDownloadFilesPage.openDownloadPageLink();
 
+    File jpg = dragDropUploadDownloadFilesPage.downloadJPGFile();
+    assertThat(jpg).exists();
+    assertThat(jpg.getName()).isEqualTo("cdct.jpg");
+
+    }
+    @Test
+    @DisplayName("Download Json file")
+    void checkDownloadJsonFile() throws FileNotFoundException {
+        dragDropUploadDownloadFilesPage.openDownloadPageLink();
+
+        File Json = dragDropUploadDownloadFilesPage.downloadJSONFile();
+        assertThat(Json).exists();
+        assertThat(Json.getName()).isEqualTo("some-file.json");
+
+    }
+
+    @Test
+    @DisplayName("Download TXT file")
+    void checkDownloadTXTFile() throws FileNotFoundException {
+        dragDropUploadDownloadFilesPage.openDownloadPageLink();
+
+        File TXT = dragDropUploadDownloadFilesPage.downloadTXTFile();
+        assertThat(TXT).exists();
+        assertThat(TXT.getName()).isEqualTo("some-file.txt");
+
+    }
+    @Test
+    @DisplayName("Download PNG file")
+    void checkDownloadPNGFile() throws FileNotFoundException {
+        dragDropUploadDownloadFilesPage.openDownloadPageLink();
+
+        File PNG = dragDropUploadDownloadFilesPage.downloadPNGFile();
+        assertThat(PNG).exists();
+        assertThat(PNG.getName()).isEqualTo("wdio.png");
+
+    }
+    @Test
+    @DisplayName("Download PDF file")
+    void checkDownloadPDFFile() throws FileNotFoundException {
+        dragDropUploadDownloadFilesPage.openDownloadPageLink();
+
+        File PDF = dragDropUploadDownloadFilesPage.downloadPDFFile();
+        assertThat(PDF).exists();
+        assertThat(PDF.getName()).isEqualTo("1753426913424_WPS+PDF+Quick+Start+Guide.pdf");
+
+    }
 }

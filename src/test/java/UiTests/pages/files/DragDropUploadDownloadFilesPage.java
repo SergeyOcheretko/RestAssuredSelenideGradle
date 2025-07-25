@@ -7,8 +7,8 @@ import com.codeborne.selenide.SelenideElement;
 import org.openqa.selenium.Keys;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.time.Duration;
 
 import static com.codeborne.selenide.Condition.*;
 import static com.codeborne.selenide.Selenide.*;
@@ -18,7 +18,7 @@ public class DragDropUploadDownloadFilesPage {
 
     private static final String DRAG_AND_DROP_URL = "https://practice.expandtesting.com/drag-and-drop";
     private static final String UPLOAD_FILE = "https://practice.expandtesting.com/upload";
-
+    private static final String DOWNLOAD_FILE_URL = "https://practice.expandtesting.com/download";
 
     private final SelenideElement elementA = $("#column-a");
     private final SelenideElement elementB = $("#column-b");
@@ -89,6 +89,53 @@ public class DragDropUploadDownloadFilesPage {
 
     public void clickOnChooseFileButton() {
         executeJavaScript("document.querySelector('input[name=file]').click();");
+    }
+
+public void openDownloadPageLink(){
+        Selenide.open(DOWNLOAD_FILE_URL);
+}
+public File downloadJPGFile() throws FileNotFoundException {
+    SelenideElement link = $$("a")
+            .findBy(Condition.text("cdct.jpg"))
+            .shouldBe(Condition.visible);
+
+    return link.download();
+
+}
+
+    public File downloadJSONFile() throws FileNotFoundException {
+        SelenideElement link = $$("a")
+                .findBy(Condition.text("some-file.json"))
+                .shouldBe(Condition.visible);
+
+        return link.download();
+
+    }
+
+    public File downloadTXTFile() throws FileNotFoundException {
+        SelenideElement link = $$("a")
+                .findBy(Condition.text("some-file.txt"))
+                .shouldBe(Condition.visible);
+
+        return link.download();
+
+    }
+
+    public File downloadPNGFile() throws FileNotFoundException {
+        SelenideElement link = $$("a")
+                .findBy(Condition.text("wdio.png"))
+                .shouldBe(Condition.visible);
+
+        return link.download();
+
+    }
+    public File downloadPDFFile() throws FileNotFoundException {
+        SelenideElement link = $$("a")
+                .findBy(Condition.text("1753426913424_WPS PDF Quick Start Guide.pdf"))
+                .shouldBe(Condition.visible);
+
+        return link.download();
+
     }
 
 

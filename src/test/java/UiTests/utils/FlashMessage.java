@@ -7,8 +7,8 @@ public enum FlashMessage {
     SUCCESS_LOGOUT("You logged out of the secure area!"),
     SEND_FORGOT_PASSWORD("An e-mail has been sent to you which explains how to reset your password."),
     FILE_TOO_LARGE ("File too large, please select a file less than 500KB"),
-    PLEASE_UPLOAD_FILE_BANNER("Please select a file.");
-
+    PLEASE_UPLOAD_FILE_BANNER("Please select a file."),
+    VALIDATION_TICKET_SUCCESS("Thank you for validating your ticket");
     private final String text;
 
     FlashMessage(String text) {

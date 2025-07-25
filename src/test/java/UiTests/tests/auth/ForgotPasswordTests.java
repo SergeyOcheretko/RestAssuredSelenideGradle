@@ -6,7 +6,6 @@ import com.github.javafaker.Faker;
 import io.qameta.allure.*;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import UiTests.utils.FlashMessage;
