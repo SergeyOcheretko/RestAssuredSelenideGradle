@@ -1,15 +1,13 @@
 pipeline {
-    agent any          // либо agent { label 'docker' }
+    agent any
 
     environment {
         JAVA_TOOL_OPTIONS = '-Dfile.encoding=UTF-8'
         GRADLE_USER_HOME  = 'C:\\temp\\gradle-cache'
-        COMPOSE_PROJECT   = 'practice-tests'
     }
 
     stages {
 
-        /* 1. Получаем код */
         stage('Checkout') {
             steps {
                 echo '📥 Получаем код из репозитория...'
@@ -17,46 +15,11 @@ pipeline {
             }
         }
 
-        /* 2. Сборка Docker-образа */
-        stage('Docker Build') {
-            steps {
-                script {
-                    bat 'docker build -t app-under-test:latest .'
-                }
-            }
-        }
-
-        /* 3. Поднимаем стек сервисов */
-        stage('Start Services') {
-            steps {
-                script {
-                    bat "docker compose -p %COMPOSE_PROJECT% -f docker-compose.test.yml up -d --build"
-                }
-            }
-        }
-
-        /* 4. Ждём готовности приложения (порт 8080) */
-        stage('Wait for App') {
-            steps {
-                script {
-                    bat '''
-                    powershell -command "
-                    $t = 0
-                    while (-not (Test-NetConnection -ComputerName localhost -Port 8080).TcpTestSucceeded) {
-                        Start-Sleep 5
-                        $t += 5
-                        if ($t -gt 120) { throw 'App did not start in 120s' }
-                    }"
-                    '''
-                }
-            }
-        }
-
-        /* 5. Очистка и установка зависимостей Gradle */
         stage('Clean Build') {
             steps {
                 echo '🧹 Выполняем gradle clean...'
                 bat 'call .\\gradlew clean --no-daemon --gradle-user-home=%GRADLE_USER_HOME%'
+
                 echo '🧹 Очищаем allure-results...'
                 bat '''
                 if exist build\\allure-results (
@@ -66,7 +29,6 @@ pipeline {
             }
         }
 
-        /* 6. UI-тесты */
         stage('UI Tests') {
             steps {
                 echo '🧪 Запускаем UI тесты...'
@@ -74,7 +36,6 @@ pipeline {
             }
         }
 
-        /* 7. API-тесты */
         stage('API Tests') {
             steps {
                 echo '🌐 Запускаем API тесты...'
@@ -82,7 +43,6 @@ pipeline {
             }
         }
 
-        /* 8. Подключаем categories.json для Allure */
         stage('Inject Allure Categories') {
             steps {
                 echo '🧩 Подключаем categories.json для Allure...'
@@ -143,7 +103,6 @@ pipeline {
             }
         }
 
-        /* 9. Генерируем Allure-отчёт */
         stage('Allure Report') {
             steps {
                 echo '📊 Генерируем Allure отчёт...'
@@ -151,7 +110,6 @@ pipeline {
             }
         }
 
-        /* 10. Публикуем отчёт */
         stage('Publish Report') {
             steps {
                 echo '📤 Публикуем Allure отчёт...'
@@ -165,12 +123,6 @@ pipeline {
             echo '📦 Архивируем JUnit и Allure HTML отчёт...'
             junit testResults: '**/build/test-results/test/*.xml', allowEmptyResults: true, skipMarkingBuildUnstable: true
             archiveArtifacts artifacts: 'build/allure-report/**', allowEmptyArchive: true
-        }
-        cleanup {
-            /* Останавливаем и удаляем контейнеры/сети/тома */
-            script {
-                bat "docker compose -p %COMPOSE_PROJECT% -f docker-compose.test.yml down --volumes --remove-orphans"
-            }
         }
     }
 }
