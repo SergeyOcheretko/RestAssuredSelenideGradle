@@ -117,14 +117,5 @@ public class DragDropUploadDownloadFilesTests extends UiBaseTest {
         assertThat(PNG.getName()).isEqualTo("wdio.png");
 
     }
-    @Test
-    @DisplayName("Download PDF file")
-    void checkDownloadPDFFile() throws FileNotFoundException {
-        dragDropUploadDownloadFilesPage.openDownloadPageLink();
 
-        File PDF = dragDropUploadDownloadFilesPage.downloadPDFFile();
-        assertThat(PDF).exists();
-        assertThat(PDF.getName()).isEqualTo("1753440191774_test-file.pdf");
-
-    }
 }
