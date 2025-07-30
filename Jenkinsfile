@@ -44,9 +44,9 @@ pipeline {
             }
         }
 
-        stage('Stop existing Selenium Grid') {
+        stage('Stop Selenium Grid') {
             steps {
-                echo '🛑 Останавливаем Selenium Grid (если работает)...'
+                echo '🛑 Завершаем работу Selenium Grid (если был запущен)...'
                 bat 'docker compose -f docker-compose.yml down --remove-orphans || echo "Нечего останавливать"'
             }
         }
@@ -60,25 +60,37 @@ pipeline {
 
         stage('Wait Grid Ready') {
             steps {
-                echo '⏳ Ожидаем готовность Selenium Grid...'
+                echo '⏳ Проверяем готовность Selenium Grid...'
                 powershell '''
                 $attempt = 0
+                $ready = $false
                 do {
                     $attempt++
                     try {
-                        $r = Invoke-WebRequest -Uri "http://localhost:4444/wd/hub/status" -UseBasicParsing -TimeoutSec 5
-                        if ($r.Content -match '"ready":true') { exit 0 }
-                    } catch {}
+                        $response = Invoke-WebRequest -Uri "http://localhost:4444/wd/hub/status" -UseBasicParsing -TimeoutSec 5
+                        Write-Host "📡 Попытка $attempt: Получен ответ..."
+                        Write-Host $response.Content
+                        if ($response.Content -match '"ready":true') {
+                            Write-Host "✅ Grid готов!"
+                            $ready = $true
+                            break
+                        }
+                    } catch {
+                        Write-Host "⚠️ Ошибка подключения к Grid, попытка $attempt..."
+                    }
                     Start-Sleep -Seconds 2
-                } while ($attempt -lt 30)
-                throw "❌ Selenium Grid не стал ready за 60 секунд"
+                } while ($attempt -lt 60)
+
+                if (-not $ready) {
+                    throw "❌ Selenium Grid не стал ready за 2 минуты"
+                }
                 '''
             }
         }
 
         stage('Clean Build') {
             steps {
-                echo '🧹 Gradle clean...'
+                echo '🧹 Выполняем gradle clean...'
                 bat 'call .\\gradlew clean --no-daemon --gradle-user-home=%GRADLE_USER_HOME%'
 
                 echo '🧹 Очищаем allure-results...'
@@ -92,7 +104,7 @@ pipeline {
 
         stage('UI Tests') {
             steps {
-                echo '🧪 UI тесты на Selenium Grid...'
+                echo '🧪 Запускаем UI тесты на Grid...'
                 bat '''
                 call .\\gradlew uiTest --console=plain --no-daemon ^
                 -Dwebdriver.remote.url=%GRID_URL% ^
@@ -103,7 +115,7 @@ pipeline {
 
         stage('API Tests') {
             steps {
-                echo '🌐 Запуск API тестов...'
+                echo '🌐 Запускаем API тесты...'
                 bat 'call .\\gradlew apiTest --console=plain --no-daemon --gradle-user-home=%GRADLE_USER_HOME%'
             }
         }
@@ -117,7 +129,7 @@ pipeline {
 
         stage('Publish Report') {
             steps {
-                echo '📤 Публикация Allure отчёта...'
+                echo '📤 Публикуем Allure отчёт...'
                 allure includeProperties: false, jdk: '', results: [[path: 'build/allure-results']]
             }
         }
@@ -125,7 +137,7 @@ pipeline {
 
     post {
         always {
-            echo '📦 Архивируем JUnit и Allure HTML отчёт...'
+            echo '📦 Архивируем JUnit, Allure HTML отчёт и docker логи...'
             junit testResults: '**/build/test-results/test/*.xml', allowEmptyResults: true, skipMarkingBuildUnstable: true
             archiveArtifacts artifacts: 'build/allure-report/**', allowEmptyArchive: true
 
