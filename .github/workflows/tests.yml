@@ -112,11 +112,11 @@ jobs:
           name: allure-cli
           path: allure
 
-      - name: 🔗 Add CLI to PATH
+      - name: 🔗 Добавить Allure CLI в PATH
         shell: pwsh
         run: |
-          $cliPath = Resolve-Path "$PWD\\allure\\bin"
-          $env:PATH += ";$cliPath"
+          $cliDir = Resolve-Path "$PWD\allure\bin"
+          Add-Content $env:GITHUB_PATH $cliDir
 
 
       - name: 📊 Generate Allure report
