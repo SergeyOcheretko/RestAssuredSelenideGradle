@@ -20,7 +20,7 @@ pipeline {
             steps {
                 echo '🧼 Удаляем завершённые контейнеры (Windows CMD)...'
                 bat '''
-                FOR /F "tokens=*" %%i IN ('docker ps -a --filter "status=exited" -q') DO docker rm %%i
+                     FOR /F "tokens=*" %%i IN ('docker ps -a --filter "status=exited" -q') DO docker rm %%i
                 '''
             }
         }
