@@ -34,7 +34,7 @@ jobs:
         run: |
           ./gradlew clean --no-daemon --gradle-user-home="$env:GRADLE_USER_HOME"
           Remove-Item -Path "build\allure-results" -Recurse -Force -ErrorAction SilentlyContinue
-          New-Item -ItemType Directory -Path "build\allure-results" -Force
+          New-Item -ItemType Directory -Path "build/allure-results" -Force
 
       - name: 🧪 Run UI tests
         run: ./gradlew uiTest --console=plain --no-daemon --gradle-user-home=%GRADLE_USER_HOME%
@@ -93,21 +93,21 @@ jobs:
           choco install allure.commandline -y
           $env:PATH += ";$env:ProgramFiles\Allure\bin"
 
-    - name: 📊 Generate Allure report
+      - name: 📊 Generate Allure report
         run: ./gradlew allureReport --console=plain --no-daemon --gradle-user-home=%GRADLE_USER_HOME%
 
-        - name: 📤 Upload Allure HTML
-          uses: actions/upload-artifact@v4.3.1
-          with:
-            name: allure-report-api
-            path: build/reports/allure-report/allureReport
+      - name: 📤 Upload Allure HTML
+        uses: actions/upload-artifact@v4.3.1
+        with:
+          name: allure-report-api
+          path: build/reports/allure-report/allureReport
 
-        - name: 📦 Archive JUnit results
-          uses: actions/upload-artifact@v4
-          with:
-            name: junit-results-api
-            path: |
-              **/test-results/**/*.xml
+      - name: 📦 Archive JUnit results
+        uses: actions/upload-artifact@v4
+        with:
+          name: junit-results-api
+          path: |
+            **/test-results/**/*.xml
 
   deploy-report:
     runs-on: windows-latest
@@ -134,4 +134,3 @@ jobs:
         with:
           personal_token: ${{ secrets.GH_PAGES_TOKEN }}
           publish_dir: build/reports/allure-report/allureReport
-
