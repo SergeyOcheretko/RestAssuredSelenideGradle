@@ -19,10 +19,12 @@ pipeline {
        stage('Cleanup Docker') {
            steps {
                echo '🧼 Удаляем завершённые контейнеры (Windows CMD)...'
-               bat '''
-               FOR /F "tokens=*" %%i IN (`docker ps -a --filter "status=exited" -q`) DO docker rm %%i
-               '''
-           }
+            powershell '''
+            docker ps -a --filter "status=exited" -q | ForEach-Object {
+                Write-Host "🧹 Удаляем контейнер $_"
+                docker rm $_
+            }
+            '''
        }
 
 
