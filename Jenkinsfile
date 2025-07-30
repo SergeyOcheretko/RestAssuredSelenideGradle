@@ -16,14 +16,17 @@ pipeline {
             }
         }
 
-        stage('Cleanup Docker') {
-            steps {
-                echo '🧼 Удаляем завершённые контейнеры (Windows CMD)...'
-                bat '''
-                     FOR /F "tokens=*" %%i IN ('docker ps -a --filter "status=exited" -q') DO docker rm %%i
-                '''
-            }
-        }
+       stage('Cleanup Docker') {
+           steps {
+               echo '🧼 Удаляем завершённые контейнеры (Windows CMD)...'
+               bat '''
+               FOR /F "tokens=*" %%i IN (^
+                   'docker ps -a --filter "status=exited" -q'^
+               ) DO docker rm %%i
+               '''
+           }
+       }
+
 
         stage('Start Selenium Grid') {
             steps {
