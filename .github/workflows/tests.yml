@@ -6,8 +6,26 @@ on:
   workflow_dispatch:
 
 jobs:
+  prepare-allure-cli:
+    runs-on: windows-latest
+    steps:
+      - name: 📦 Download Allure CLI
+        shell: pwsh
+        run: |
+          $version = "2.27.0"
+          $url = "https://github.com/allure-framework/allure2/releases/download/$version/allure-$version.zip"
+          Invoke-WebRequest -Uri $url -OutFile allure.zip
+          Expand-Archive allure.zip -DestinationPath allure
+
+      - name: 📤 Upload Allure CLI
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-cli
+          path: allure
+
   ui-tests:
     runs-on: windows-latest
+    needs: prepare-allure-cli
     strategy:
       matrix:
         browser: [ chrome, firefox ]
@@ -64,6 +82,7 @@ jobs:
 
   api-tests:
     runs-on: windows-latest
+    needs: prepare-allure-cli
 
     env:
       JAVA_TOOL_OPTIONS: -Dfile.encoding=UTF-8
@@ -87,13 +106,15 @@ jobs:
         run: |
           copy src/test/resources/categories.json build/allure-results/categories.json
 
-      - name: 📦 Download Allure CLI
+      - name: 📦 Download Allure CLI artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: allure-cli
+          path: allure
+
+      - name: 🔗 Add CLI to PATH
         shell: pwsh
         run: |
-          $version = "2.27.0"
-          $url = "https://github.com/allure-framework/allure2/releases/download/$version/allure-$version.zip"
-          Invoke-WebRequest -Uri $url -OutFile allure.zip
-          Expand-Archive allure.zip -DestinationPath allure
           $env:PATH += ";$PWD\\allure\\bin"
 
       - name: 📊 Generate Allure report
@@ -115,7 +136,8 @@ jobs:
   deploy-report:
     runs-on: windows-latest
     if: always()
-    needs: [ ui-tests, api-tests ]
+    needs: [ prepare-allure-cli, ui-tests, api-tests ]
+
     steps:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
@@ -126,13 +148,15 @@ jobs:
           pattern: allure-report-*
           path: merged/allure-input
 
-      - name: 📦 Download Allure CLI
+      - name: 📦 Download Allure CLI artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: allure-cli
+          path: allure
+
+      - name: 🔗 Add CLI to PATH
         shell: pwsh
         run: |
-          $version = "2.27.0"
-          $url = "https://github.com/allure-framework/allure2/releases/download/$version/allure-$version.zip"
-          Invoke-WebRequest -Uri $url -OutFile allure.zip
-          Expand-Archive allure.zip -DestinationPath allure
           $env:PATH += ";$PWD\\allure\\bin"
 
       - name: 🧬 Merge Allure HTML reports
