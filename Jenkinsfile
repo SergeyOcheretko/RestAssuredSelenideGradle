@@ -28,19 +28,35 @@ pipeline {
             }
         }
 
-        stage('Wait Grid Ready') {
-            steps {
-                script {
-                    echo '⏳ Ждём регистрации нод...'
-                    bat '''
-                    for /l %%i in (1,1,30) do (
-                      curl -s -o nul -w "%%{http_code}" %GRID_URL%/status | findstr "200" >nul && exit 0
-                      timeout 2 >nul
-                    )
-                    '''
-                }
-            }
-        }
+      stage('Wait Grid Ready') {
+          steps {
+              script {
+                  if (isUnix()) {
+                      sh '''
+                      for i in {1..30}; do
+                          curl -s http://localhost:4444/wd/hub/status | grep '"ready":true' && exit 0
+                          sleep 2
+                      done
+                      echo "Grid не стал ready за 60 с" && exit 1
+                      '''
+                  } else {
+                      powershell '''
+                      $attempt = 0
+                      do {
+                          $attempt++
+                          try {
+                              $r = Invoke-WebRequest -Uri "http://localhost:4444/wd/hub/status" -UseBasicParsing -TimeoutSec 5
+                              if ($r.Content -match '"ready":true') { exit 0 }
+                          } catch {}
+                          Start-Sleep -Seconds 2
+                      } while ($attempt -lt 30)
+                      Write-Error "Grid не стал ready за 60 с"
+                      exit 1
+                      '''
+                  }
+              }
+          }
+      }
 
         /* ============== ТЕСТЫ ============== */
         stage('Clean Build') {
@@ -75,15 +91,6 @@ pipeline {
             }
         }
 
-        /* ============== ОТЧЁТЫ ============== */
-        stage('Inject Allure Categories') {
-            steps {
-                echo '🧩 Подключаем categories.json для Allure...'
-                writeFile file: 'build/allure-results/categories.json', text: '''
-[... /* ваш JSON без изменений */ ...]
-'''.stripIndent()
-            }
-        }
 
         stage('Allure Report') {
             steps {
