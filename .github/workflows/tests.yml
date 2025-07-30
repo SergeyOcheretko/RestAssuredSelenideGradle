@@ -111,8 +111,21 @@ jobs:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
 
+      - name: 📦 Download Allure reports
+        uses: actions/download-artifact@v4
+        with:
+          pattern: allure-report-*
+          path: merged/allure-input
+
+      - name: 🧬 Merge Allure HTML reports
+        shell: pwsh
+        run: |
+          $inputDirs = Get-ChildItem -Directory -Path merged/allure-input | Select-Object -ExpandProperty FullName
+          allure generate $inputDirs --clean -o build/reports/allure-report/allureReport
+
       - name: 🚀 Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           personal_token: ${{ secrets.GH_PAGES_TOKEN }}
           publish_dir: build/reports/allure-report/allureReport
+
