@@ -26,7 +26,7 @@ pipeline {
             }
             '''
        }
-
+}
 
         stage('Start Selenium Grid') {
             steps {
