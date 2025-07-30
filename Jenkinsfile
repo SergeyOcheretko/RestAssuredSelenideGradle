@@ -27,7 +27,12 @@ pipeline {
             '''
        }
 }
-
+  stage('Stop existing Selenium Grid') {
+    steps {
+        echo '🛑 Останавливаем текущую Selenium Grid (если есть)'
+        bat 'docker compose -f docker-compose.yml down || echo "Ничего не остановлено"'
+    }
+}
         stage('Start Selenium Grid') {
             steps {
                 script {
