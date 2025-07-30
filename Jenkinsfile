@@ -16,9 +16,15 @@ pipeline {
             }
         }
 
-        /* ===================================
-           SELENIUM GRID
-           =================================== */
+        stage('Cleanup Docker') {
+            steps {
+                echo '🧼 Удаляем завершённые контейнеры...'
+                bat '''
+                docker ps -a --filter "status=exited" -q | foreach { docker rm $_ }
+                '''
+            }
+        }
+
         stage('Start Selenium Grid') {
             steps {
                 script {
@@ -28,37 +34,26 @@ pipeline {
             }
         }
 
-      stage('Wait Grid Ready') {
-          steps {
-              script {
-                  if (isUnix()) {
-                      sh '''
-                      for i in {1..30}; do
-                          curl -s http://localhost:4444/wd/hub/status | grep '"ready":true' && exit 0
-                          sleep 2
-                      done
-                      echo "Grid не стал ready за 60 с" && exit 1
-                      '''
-                  } else {
-                      powershell '''
-                      $attempt = 0
-                      do {
-                          $attempt++
-                          try {
-                              $r = Invoke-WebRequest -Uri "http://localhost:4444/wd/hub/status" -UseBasicParsing -TimeoutSec 5
-                              if ($r.Content -match '"ready":true') { exit 0 }
-                          } catch {}
-                          Start-Sleep -Seconds 2
-                      } while ($attempt -lt 60)
-                      Write-Error "Grid не стал ready за 60 с"
-                      exit 1
-                      '''
-                  }
-              }
-          }
-      }
+        stage('Wait Grid Ready') {
+            steps {
+                script {
+                    powershell '''
+                    $attempt = 0
+                    do {
+                        $attempt++
+                        try {
+                            $r = Invoke-WebRequest -Uri "http://localhost:4444/wd/hub/status" -UseBasicParsing -TimeoutSec 5
+                            if ($r.Content -match '"ready":true') { exit 0 }
+                        } catch {}
+                        Start-Sleep -Seconds 2
+                    } while ($attempt -lt 30)
+                    Write-Error "Grid не стал ready за 60 с"
+                    exit 1
+                    '''
+                }
+            }
+        }
 
-        /* ============== ТЕСТЫ ============== */
         stage('Clean Build') {
             steps {
                 echo '🧹 Выполняем gradle clean...'
@@ -76,21 +71,20 @@ pipeline {
         stage('UI Tests') {
             steps {
                 echo '🧪 Запускаем UI тесты на Grid...'
-                bat(script: '''
-                    call .\\gradlew uiTest --console=plain --no-daemon ^
-                    -Dwebdriver.remote.url=%GRID_URL% ^
-                    --gradle-user-home=%GRADLE_USER_HOME%
-                ''', returnStatus: true)
+                bat '''
+                call .\\gradlew uiTest --console=plain --no-daemon ^
+                -Dwebdriver.remote.url=%GRID_URL% ^
+                --gradle-user-home=%GRADLE_USER_HOME%
+                '''
             }
         }
 
         stage('API Tests') {
             steps {
                 echo '🌐 Запускаем API тесты...'
-                bat(script: 'call .\\gradlew apiTest --console=plain --no-daemon --gradle-user-home=%GRADLE_USER_HOME%', returnStatus: true)
+                bat 'call .\\gradlew apiTest --console=plain --no-daemon --gradle-user-home=%GRADLE_USER_HOME%'
             }
         }
-
 
         stage('Allure Report') {
             steps {
@@ -113,6 +107,7 @@ pipeline {
             junit testResults: '**/build/test-results/test/*.xml', allowEmptyResults: true, skipMarkingBuildUnstable: true
             archiveArtifacts artifacts: 'build/allure-report/**', allowEmptyArchive: true
         }
+
         cleanup {
             echo '🧹 Останавливаем Selenium Grid...'
             bat 'docker compose -f docker-compose.yml down --remove-orphans || exit 0'
