@@ -18,9 +18,9 @@ pipeline {
 
         stage('Cleanup Docker') {
             steps {
-                echo '🧼 Удаляем завершённые контейнеры...'
+                echo '🧼 Удаляем завершённые контейнеры (Windows CMD)...'
                 bat '''
-                docker ps -a --filter "status=exited" -q | foreach { docker rm $_ }
+                FOR /F "tokens=*" %%i IN ('docker ps -a --filter "status=exited" -q') DO docker rm %%i
                 '''
             }
         }
