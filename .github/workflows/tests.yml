@@ -112,12 +112,17 @@ jobs:
           name: allure-cli
           path: allure
 
-      - name: 🔗 Add CLI to PATH
+      - name: 🔗 Add CLI to PATH (with fallback)
         shell: pwsh
         run: |
-          $cliBinPath = Resolve-Path "$env:GITHUB_WORKSPACE\allure\bin"
+          $cliBinPath = "$(Split-Path $env:GITHUB_WORKSPACE -Parent)\allure\bin"
+          if (!(Test-Path $cliBinPath)) {
+            $cliBinPath = "$env:GITHUB_WORKSPACE\allure\bin"
+          }
+          if (!(Test-Path $cliBinPath)) {
+            Write-Error "❌ Allure CLI path not found: $cliBinPath"
+          }
           $env:PATH += ";$cliBinPath"
-
 
       - name: 📊 Generate Allure report
         run: ./gradlew allureReport --console=plain --no-daemon --gradle-user-home=%GRADLE_USER_HOME%
@@ -156,10 +161,17 @@ jobs:
           name: allure-cli
           path: allure
 
-      - name: 🔗 Add CLI to PATH
+      - name: 🔗 Add CLI to PATH (with fallback)
         shell: pwsh
         run: |
-          $env:PATH += ";$PWD\\allure\\bin"
+          $cliBinPath = "$(Split-Path $env:GITHUB_WORKSPACE -Parent)\allure\bin"
+          if (!(Test-Path $cliBinPath)) {
+            $cliBinPath = "$env:GITHUB_WORKSPACE\allure\bin"
+          }
+          if (!(Test-Path $cliBinPath)) {
+            Write-Error "❌ Allure CLI path not found: $cliBinPath"
+          }
+          $env:PATH += ";$cliBinPath"
 
       - name: 🧬 Merge Allure HTML reports
         shell: pwsh
