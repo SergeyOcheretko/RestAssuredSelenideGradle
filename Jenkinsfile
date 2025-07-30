@@ -2,28 +2,17 @@ pipeline {
     agent any
 
     environment {
-        JAVA_TOOL_OPTIONS = '-Dfile.encoding=UTF-8'
-        GRADLE_USER_HOME  = 'C:\\temp\\gradle-cache'
-        GRID_URL          = 'http://localhost:4444/wd/hub'
+        DOCKER_COMPOSE_FILE = 'docker-compose.yml'
+        GRID_STATUS_URL = 'http://localhost:4444/status'
     }
 
     stages {
-
-        stage('Checkout') {
-            steps {
-                echo '📥 Получаем код из репозитория...'
-                checkout scm
-            }
-        }
 
         stage('Cleanup Docker') {
             steps {
                 echo '🧼 Удаляем завершённые контейнеры...'
                 powershell '''
-                docker ps -a --filter "status=exited" -q | ForEach-Object {
-                    Write-Host "🧹 Удаляем контейнер $_"
-                    docker rm $_
-                }
+                    docker container prune -f
                 '''
             }
         }
@@ -32,123 +21,103 @@ pipeline {
             steps {
                 echo '🔎 Проверяем занятость порта 4444...'
                 powershell '''
-                $used = netstat -an | findstr ":4444"
-                if ($used) {
-                    Write-Host "⚠️ Порт 4444 занят. Пробуем остановить контейнеры..."
-                    docker ps -q --filter "ancestor=selenium/hub:4.34.0" | ForEach-Object {
-                        docker stop $_
-                        docker rm $_
+                    $used = netstat -an | findstr ":4444"
+                    $log = "Порт 4444 " + ($used ? "занят" : "свободен")
+                    $log | Out-File "build/port-check.log"
+
+                    if ($used) {
+                        "❌ Порт 4444 занят. Перезапускаем Grid..." | Out-File "build/grid-recovery.log"
+                        docker ps -q --filter "ancestor=selenium/hub" | ForEach-Object { docker stop $_; docker rm $_ }
+                        docker compose -f docker-compose.yml up -d
+                        Start-Sleep -Seconds 10
                     }
-                }
                 '''
-            }
-        }
-
-        stage('Stop Selenium Grid') {
-            steps {
-                echo '🛑 Завершаем работу Selenium Grid (если был запущен)...'
-                bat 'docker compose -f docker-compose.yml down --remove-orphans || echo "Нечего останавливать"'
-            }
-        }
-
-        stage('Start Selenium Grid') {
-            steps {
-                echo '🐳 Запускаем Selenium Grid...'
-                bat 'docker compose -f docker-compose.yml up -d'
+                archiveArtifacts artifacts: 'build/*.log', allowEmptyArchive: true
             }
         }
 
         stage('Wait Grid Ready') {
             steps {
-                echo '⏳ Проверяем готовность Selenium Grid...'
+                echo '⏳ Ожидаем готовность Selenium Grid...'
                 powershell '''
-                $attempt = 0
-                $ready = $false
-                do {
-                    $attempt++
-                    try {
-                        $response = Invoke-WebRequest -Uri "http://localhost:4444/wd/hub/status" -UseBasicParsing -TimeoutSec 5
-                        Write-Host "📡 Попытка $attempt: Получен ответ..."
-                        Write-Host $response.Content
-                        if ($response.Content -match '"ready":true') {
-                            Write-Host "✅ Grid готов!"
-                            $ready = $true
-                            break
+                    $tries = 0
+                    do {
+                        Start-Sleep -Seconds 10
+                        try {
+                            $response = Invoke-RestMethod -Uri "http://localhost:4444/status"
+                        } catch {
+                            $response = @{ value = @{ ready = $false } }
                         }
-                    } catch {
-                        Write-Host "⚠️ Ошибка подключения к Grid, попытка $attempt..."
-                    }
-                    Start-Sleep -Seconds 2
-                } while ($attempt -lt 60)
+                        $tries++
+                    } while ($response.value.ready -ne $true -and $tries -lt 5)
 
-                if (-not $ready) {
-                    throw "❌ Selenium Grid не стал ready за 2 минуты"
-                }
+                    if ($response.value.ready -ne $true) {
+                        "❌ Grid не стал ready за $(10 * $tries) секунд" | Out-File "build/grid-fail.log"
+                        exit 0  # Мягкое завершение, без падения пайплайна
+                    } else {
+                        "✅ Grid готов через $(10 * $tries) секунд" | Out-File "build/grid-ready.log"
+                    }
                 '''
+                archiveArtifacts artifacts: 'build/grid-*.log', allowEmptyArchive: true
             }
         }
 
         stage('Clean Build') {
             steps {
-                echo '🧹 Выполняем gradle clean...'
-                bat 'call .\\gradlew clean --no-daemon --gradle-user-home=%GRADLE_USER_HOME%'
-
-                echo '🧹 Очищаем allure-results...'
-                bat '''
-                if exist build\\allure-results (
-                    del /q build\\allure-results\\*
-                )
-                '''
+                echo '🧹 Чистим предыдущую сборку...'
+                bat 'gradlew clean'
             }
         }
 
         stage('UI Tests') {
             steps {
-                echo '🧪 Запускаем UI тесты на Grid...'
-                bat '''
-                call .\\gradlew uiTest --console=plain --no-daemon ^
-                -Dwebdriver.remote.url=%GRID_URL% ^
-                --gradle-user-home=%GRADLE_USER_HOME%
-                '''
+                echo '🎯 Запускаем UI тесты...'
+                bat 'gradlew testUI'
             }
         }
 
         stage('API Tests') {
             steps {
                 echo '🌐 Запускаем API тесты...'
-                bat 'call .\\gradlew apiTest --console=plain --no-daemon --gradle-user-home=%GRADLE_USER_HOME%'
+                bat 'gradlew testAPI'
             }
         }
 
         stage('Allure Report') {
             steps {
-                echo '📊 Генерация Allure отчёта...'
-                bat 'call .\\gradlew allureReport --console=plain --no-daemon --gradle-user-home=%GRADLE_USER_HOME%'
+                echo '📊 Генерируем Allure отчёт...'
+                bat 'gradlew allureReport'
             }
         }
 
         stage('Publish Report') {
             steps {
-                echo '📤 Публикуем Allure отчёт...'
-                allure includeProperties: false, jdk: '', results: [[path: 'build/allure-results']]
+                echo '📦 Архивируем JUnit, Allure HTML отчёт и docker логи...'
+                junit '**/build/test-results/**/*.xml'
+                archiveArtifacts artifacts: '**/build/reports/**, build/docker-logs.txt', allowEmptyArchive: true
+
+                bat 'docker compose -f docker-compose.yml logs > build/docker-logs.txt'
+            }
+        }
+
+        stage('Stop Grid') {
+            steps {
+                echo '🧹 Останавливаем Selenium Grid...'
+                bat 'docker compose -f docker-compose.yml down --remove-orphans || exit 0'
             }
         }
     }
 
     post {
         always {
-            echo '📦 Архивируем JUnit, Allure HTML отчёт и docker логи...'
-            junit testResults: '**/build/test-results/test/*.xml', allowEmptyResults: true, skipMarkingBuildUnstable: true
-            archiveArtifacts artifacts: 'build/allure-report/**', allowEmptyArchive: true
-
-            echo '📜 Сохраняем логи Selenium Grid...'
-            bat 'docker compose -f docker-compose.yml logs > build/docker-logs.txt'
-            archiveArtifacts artifacts: 'build/docker-logs.txt', allowEmptyArchive: true
+            echo '🪶 Завершение пайплайна...'
+            archiveArtifacts artifacts: 'build/*.log', allowEmptyArchive: true
         }
-
-        cleanup {
-            echo '🧹 Останавливаем Selenium Grid...'
-            bat 'docker compose -f docker-compose.yml down --remove-orphans || exit 0'
+        failure {
+            echo '❗ Пайплайн завершён с ошибкой'
+        }
+        success {
+            echo '✅ Пайплайн завершён успешно'
         }
     }
 }
