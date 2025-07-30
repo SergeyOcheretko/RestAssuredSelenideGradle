@@ -49,7 +49,7 @@ pipeline {
                               if ($r.Content -match '"ready":true') { exit 0 }
                           } catch {}
                           Start-Sleep -Seconds 2
-                      } while ($attempt -lt 30)
+                      } while ($attempt -lt 60)
                       Write-Error "Grid не стал ready за 60 с"
                       exit 1
                       '''
