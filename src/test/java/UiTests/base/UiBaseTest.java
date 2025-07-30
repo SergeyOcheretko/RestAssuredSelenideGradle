@@ -14,15 +14,14 @@ public abstract class UiBaseTest {
 
     @BeforeEach
     final void setUp() {
-        Configuration.remote      = "http://localhost:4444/wd/hub";
-        Configuration.baseUrl     = TestConfig.baseUrl();
-        Configuration.browserSize = TestConfig.browserSize();
-        Configuration.timeout     = TestConfig.timeout();
-        Configuration.headless    = TestConfig.headless();
-        Configuration.pageLoadTimeout = TestConfig.pageLoadTimeout();
-    }
+        String browser = System.getenv().getOrDefault("BROWSER", "chrome");
+        Configuration.remote           = "http://localhost:4444/wd/hub";
+        Configuration.browserSize      = TestConfig.browserSize();
+        Configuration.timeout          = TestConfig.timeout();
+        Configuration.headless         = TestConfig.headless();
+        Configuration.pageLoadTimeout  = TestConfig.pageLoadTimeout();
+        Configuration.baseUrl          = TestConfig.baseUrl();
 
-    protected void openBrowser(String browser) {
         if ("chrome".equals(browser)) {
             ChromeOptions co = new ChromeOptions();
             co.addArguments("--host-resolver-rules=MAP pagead2.googlesyndication.com 127.0.0.1,MAP googleads.g.doubleclick.net 127.0.0.1,MAP tpc.googlesyndication.com 127.0.0.1");
@@ -31,6 +30,8 @@ public abstract class UiBaseTest {
         } else {
             Configuration.browserCapabilities = new FirefoxOptions();
         }
+
+        Configuration.browser = browser;
         open(TestConfig.baseUrl());
     }
 

@@ -2,122 +2,127 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_COMPOSE_FILE = 'docker-compose.yml'
-        GRID_STATUS_URL = 'http://localhost:4444/status'
+        JAVA_TOOL_OPTIONS = '-Dfile.encoding=UTF-8'
+        GRADLE_USER_HOME  = 'C:\\temp\\gradle-cache'
     }
 
     stages {
 
-        stage('Cleanup Docker') {
+        stage('Checkout') {
             steps {
-                echo '🧼 Удаляем завершённые контейнеры...'
-                powershell '''
-                    docker container prune -f
-                '''
-            }
-        }
-
-        stage('Detect Port Conflict') {
-            steps {
-                echo '🔎 Проверяем занятость порта 4444...'
-                powershell '''
-                    $used = netstat -an | findstr ":4444"
-                    $log = "Порт 4444 " + ($used ? "занят" : "свободен")
-                    $log | Out-File "build/port-check.log"
-
-                    if ($used) {
-                        "❌ Порт 4444 занят. Перезапускаем Grid..." | Out-File "build/grid-recovery.log"
-                        docker ps -q --filter "ancestor=selenium/hub" | ForEach-Object { docker stop $_; docker rm $_ }
-                        docker compose -f docker-compose.yml up -d
-                        Start-Sleep -Seconds 10
-                    }
-                '''
-                archiveArtifacts artifacts: 'build/*.log', allowEmptyArchive: true
-            }
-        }
-
-        stage('Wait Grid Ready') {
-            steps {
-                echo '⏳ Ожидаем готовность Selenium Grid...'
-                powershell '''
-                    $tries = 0
-                    do {
-                        Start-Sleep -Seconds 10
-                        try {
-                            $response = Invoke-RestMethod -Uri "http://localhost:4444/status"
-                        } catch {
-                            $response = @{ value = @{ ready = $false } }
-                        }
-                        $tries++
-                    } while ($response.value.ready -ne $true -and $tries -lt 5)
-
-                    if ($response.value.ready -ne $true) {
-                        "❌ Grid не стал ready за $(10 * $tries) секунд" | Out-File "build/grid-fail.log"
-                        exit 0  # Мягкое завершение, без падения пайплайна
-                    } else {
-                        "✅ Grid готов через $(10 * $tries) секунд" | Out-File "build/grid-ready.log"
-                    }
-                '''
-                archiveArtifacts artifacts: 'build/grid-*.log', allowEmptyArchive: true
+                echo '📥 Получаем код из репозитория...'
+                checkout scm
             }
         }
 
         stage('Clean Build') {
             steps {
-                echo '🧹 Чистим предыдущую сборку...'
-                bat 'gradlew clean'
+                echo '🧹 Выполняем gradle clean...'
+                bat 'call .\\gradlew clean --no-daemon --gradle-user-home=%GRADLE_USER_HOME%'
+
+                echo '🧹 Очищаем allure-results...'
+                bat '''
+                if exist build\\allure-results (
+                    del /q build\\allure-results\\*
+                )
+                '''
             }
         }
 
         stage('UI Tests') {
             steps {
-                echo '🎯 Запускаем UI тесты...'
-                bat 'gradlew testUI'
+                echo '🧪 Запускаем UI тесты...'
+                bat(script: 'call .\\gradlew uiTest --console=plain --no-daemon --gradle-user-home=%GRADLE_USER_HOME%', returnStatus: true)
             }
         }
 
         stage('API Tests') {
             steps {
                 echo '🌐 Запускаем API тесты...'
-                bat 'gradlew testAPI'
+                bat(script: 'call .\\gradlew apiTest --console=plain --no-daemon --gradle-user-home=%GRADLE_USER_HOME%', returnStatus: true)
+            }
+        }
+
+        stage('Inject Allure Categories') {
+            steps {
+                echo '🧩 Подключаем categories.json для Allure...'
+                writeFile file: 'build/allure-results/categories.json', text: '''
+[
+  {
+    "name": "Registration Error",
+    "matchedStatuses": ["failed"],
+    "matchedMessageRegex": ".*Username.*must be at least.*|.*cannot start or end with a hyphen.*|.*Password.*too short.*|.*Registration.*failed.*"
+  },
+  {
+    "name": "Login Error",
+    "matchedStatuses": ["failed"],
+    "matchedMessageRegex": ".*Login.*failed.*|.*incorrect password.*|.*user not found.*|.*unauthorized.*"
+  },
+  {
+    "name": "Note Operation Error",
+    "matchedStatuses": ["failed"],
+    "matchedMessageRegex": ".*note.*does not exist.*|.*invalid category.*|.*forbidden.*|.*Note creation failed.*"
+  },
+  {
+    "name": "Validation Error",
+    "matchedStatuses": ["failed"],
+    "matchedMessageRegex": ".*is invalid.*|.*must be at least.*|.*required field.*|.*format is incorrect.*"
+  },
+  {
+    "name": "Duplicate Data",
+    "matchedStatuses": ["failed"],
+    "matchedMessageRegex": ".*already exists.*|.*duplicate.*|.*conflict.*"
+  },
+  {
+    "name": "Empty Request",
+    "matchedStatuses": ["failed"],
+    "matchedMessageRegex": ".*empty body.*|.*missing fields.*|.*no content.*"
+  },
+  {
+    "name": "Content-Type Mismatch",
+    "matchedStatuses": ["failed"],
+    "matchedMessageRegex": ".*unsupported media type.*|.*Content-Type.*not allowed.*|.*header mismatch.*"
+  },
+  {
+    "name": "Authorization Failure",
+    "matchedStatuses": ["failed"],
+    "matchedMessageRegex": ".*401 Unauthorized.*|.*Access denied.*|.*expired token.*|.*unauthenticated.*"
+  },
+  {
+    "name": "UI Assertion Mismatch",
+    "matchedStatuses": ["failed"],
+    "matchedMessageRegex": ".*expected.*but was.*|.*element not found.*|.*FlashMessage.*|.*invalid label.*"
+  },
+  {
+    "name": "Server Error",
+    "matchedStatuses": ["broken"],
+    "matchedMessageRegex": ".*500 Internal Server Error.*|.*unexpected error.*|.*exception.*|.*service unavailable.*"
+  }
+]
+'''.stripIndent()
             }
         }
 
         stage('Allure Report') {
             steps {
                 echo '📊 Генерируем Allure отчёт...'
-                bat 'gradlew allureReport'
+                bat 'call .\\gradlew allureReport --console=plain --no-daemon --gradle-user-home=%GRADLE_USER_HOME%'
             }
         }
 
         stage('Publish Report') {
             steps {
-                echo '📦 Архивируем JUnit, Allure HTML отчёт и docker логи...'
-                junit '**/build/test-results/**/*.xml'
-                archiveArtifacts artifacts: '**/build/reports/**, build/docker-logs.txt', allowEmptyArchive: true
-
-                bat 'docker compose -f docker-compose.yml logs > build/docker-logs.txt'
-            }
-        }
-
-        stage('Stop Grid') {
-            steps {
-                echo '🧹 Останавливаем Selenium Grid...'
-                bat 'docker compose -f docker-compose.yml down --remove-orphans || exit 0'
+                echo '📤 Публикуем Allure отчёт...'
+                allure includeProperties: false, jdk: '', results: [[path: 'build/allure-results']]
             }
         }
     }
 
     post {
         always {
-            echo '🪶 Завершение пайплайна...'
-            archiveArtifacts artifacts: 'build/*.log', allowEmptyArchive: true
-        }
-        failure {
-            echo '❗ Пайплайн завершён с ошибкой'
-        }
-        success {
-            echo '✅ Пайплайн завершён успешно'
+            echo '📦 Архивируем JUnit и Allure HTML отчёт...'
+            junit testResults: '**/build/test-results/test/*.xml', allowEmptyResults: true, skipMarkingBuildUnstable: true
+            archiveArtifacts artifacts: 'build/allure-report/**', allowEmptyArchive: true
         }
     }
 }

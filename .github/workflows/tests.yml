@@ -1,20 +1,17 @@
-name: CI — UI & API Tests with Allure
-
-on:
-  push:
-    branches: [ main, develop ]
-  workflow_dispatch:
-
 jobs:
   test:
     runs-on: windows-latest
+    strategy:
+      matrix:
+        browser: [chrome, firefox]
+      fail-fast: false
 
     env:
       JAVA_TOOL_OPTIONS: -Dfile.encoding=UTF-8
       GRADLE_USER_HOME: C:\temp\gradle-cache
+      BROWSER: ${{ matrix.browser }}
 
     steps:
-      # 1. Устанавливаем JDK 17 (фикс «invalid source release: 17»)
       - name: ☕ Set up JDK 17
         uses: actions/setup-java@v4
         with:
@@ -24,7 +21,6 @@ jobs:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
 
-      # 2. Чистый gradle clean + безопасная очистка allure-results
       - name: 🧹 Clean build + clear allure-results
         shell: pwsh
         run: |
@@ -32,8 +28,10 @@ jobs:
           Remove-Item -Path "build\allure-results" -Recurse -Force -ErrorAction SilentlyContinue
           New-Item -ItemType Directory -Path "build\allure-results" -Force
 
-      - name: 🧪 Run UI tests
+      - name: 🧪 Run UI tests in ${{ matrix.browser }}
         run: ./gradlew uiTest --console=plain --no-daemon --gradle-user-home=%GRADLE_USER_HOME%
+        env:
+          BROWSER: ${{ matrix.browser }}
 
       - name: 🌐 Run API tests
         run: ./gradlew apiTest --console=plain --no-daemon --gradle-user-home=%GRADLE_USER_HOME%
@@ -55,6 +53,7 @@ jobs:
             { "name": "Server Error",         "matchedStatuses": ["broken"],"matchedMessageRegex": ".*500 Internal Server Error.*|.*unexpected error.*|.*exception.*|.*service unavailable.*" }
           ]
           "@ | Out-File -FilePath "build\allure-results\categories.json" -Encoding utf8NoBOM
+
       - name: 📊 Generate Allure report
         run: ./gradlew allureReport --console=plain --no-daemon --gradle-user-home=%GRADLE_USER_HOME%
 
@@ -68,12 +67,12 @@ jobs:
       - name: 📤 Upload Allure HTML
         uses: actions/upload-artifact@v4.3.1
         with:
-          name: allure-report
+          name: allure-report-${{ matrix.browser }}
           path: build/reports/allure-report/allureReport
 
       - name: 📦 Archive JUnit results
         uses: actions/upload-artifact@v4
         with:
-          name: junit-results
+          name: junit-results-${{ matrix.browser }}
           path: |
             **/test-results/**/*.xml
