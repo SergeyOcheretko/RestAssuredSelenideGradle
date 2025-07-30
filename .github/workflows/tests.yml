@@ -10,7 +10,7 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        browser: [chrome, firefox]
+        browser: [ chrome, firefox ]
       fail-fast: false
 
     env:
@@ -87,26 +87,32 @@ jobs:
         run: |
           copy src/test/resources/categories.json build/allure-results/categories.json
 
-      - name: 📊 Generate Allure report
+      - name: 🔧 Install Allure CLI
+        shell: pwsh
+        run: |
+          choco install allure.commandline -y
+          $env:PATH += ";$env:ProgramFiles\Allure\bin"
+
+    - name: 📊 Generate Allure report
         run: ./gradlew allureReport --console=plain --no-daemon --gradle-user-home=%GRADLE_USER_HOME%
 
-      - name: 📤 Upload Allure HTML
-        uses: actions/upload-artifact@v4.3.1
-        with:
-          name: allure-report-api
-          path: build/reports/allure-report/allureReport
+        - name: 📤 Upload Allure HTML
+          uses: actions/upload-artifact@v4.3.1
+          with:
+            name: allure-report-api
+            path: build/reports/allure-report/allureReport
 
-      - name: 📦 Archive JUnit results
-        uses: actions/upload-artifact@v4
-        with:
-          name: junit-results-api
-          path: |
-            **/test-results/**/*.xml
+        - name: 📦 Archive JUnit results
+          uses: actions/upload-artifact@v4
+          with:
+            name: junit-results-api
+            path: |
+              **/test-results/**/*.xml
 
   deploy-report:
     runs-on: windows-latest
     if: always()
-    needs: [ui-tests, api-tests]
+    needs: [ ui-tests, api-tests ]
     steps:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
