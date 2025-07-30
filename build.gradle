@@ -19,8 +19,7 @@ dependencies {
     // JUnit Jupiter
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.2'
-    testImplementation 'org.junit.jupiter:junit-jupiter-params:5.10.0'
-    testImplementation 'org.seleniumhq.selenium:selenium-java:4.34.0'
+
     // JUnit Platform Suite API (для @Suite и подобных аннотаций)
     testImplementation 'org.junit.platform:junit-platform-suite:1.10.0'
 
@@ -94,6 +93,7 @@ tasks.register("apiTest", Test) {
     exclude '**/ApiRunner.class'
 }
 tasks.withType(Test).configureEach {
+    maxParallelForks = 1
     doFirst {
         copy {
             from 'src/test/resources/categories.json'
