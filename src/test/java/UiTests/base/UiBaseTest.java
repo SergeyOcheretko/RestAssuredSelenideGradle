@@ -1,55 +1,41 @@
 package UiTests.base;
+
 import UiTests.utils.TestConfig;
 import com.codeborne.selenide.Configuration;
 import com.codeborne.selenide.Selenide;
-import com.codeborne.selenide.WebDriverRunner;
-
-import io.github.bonigarcia.wdm.WebDriverManager;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.firefox.FirefoxOptions;
 
 import static com.codeborne.selenide.Selenide.open;
 
-public class UiBaseTest {
-
+public abstract class UiBaseTest {
 
     @BeforeEach
-    void setUp() {
-
-
-
-        ChromeOptions options = new ChromeOptions();
-
-        options.addArguments("--host-resolver-rules=" +
-                "MAP pagead2.googlesyndication.com 127.0.0.1," +
-                "MAP googleads.g.doubleclick.net 127.0.0.1," +
-                "MAP tpc.googlesyndication.com 127.0.0.1");
-        options.addArguments("--disable-extensions");
-        options.addArguments("--disable-background-networking");
-        options.addArguments("--disable-default-apps");
-        options.addArguments("--no-sandbox");
-        options.addArguments("--disable-dev-shm-usage");
-
-            Configuration.browserCapabilities = options;
-            Configuration.baseUrl     = TestConfig.baseUrl();
-            Configuration.browserSize   = TestConfig.browserSize();
-            Configuration.timeout       = TestConfig.timeout();
-            Configuration.headless      = TestConfig.headless();
-            Configuration.pageLoadTimeout = TestConfig.pageLoadTimeout();
-
-            open(TestConfig.baseUrl());
-            WebDriverRunner.getWebDriver().manage().window().maximize();
+    final void setUp() {
+        Configuration.remote      = "http://localhost:4444/wd/hub";
+        Configuration.baseUrl     = TestConfig.baseUrl();
+        Configuration.browserSize = TestConfig.browserSize();
+        Configuration.timeout     = TestConfig.timeout();
+        Configuration.headless    = TestConfig.headless();
+        Configuration.pageLoadTimeout = TestConfig.pageLoadTimeout();
     }
+
+    protected void openBrowser(String browser) {
+        if ("chrome".equals(browser)) {
+            ChromeOptions co = new ChromeOptions();
+            co.addArguments("--host-resolver-rules=MAP pagead2.googlesyndication.com 127.0.0.1,MAP googleads.g.doubleclick.net 127.0.0.1,MAP tpc.googlesyndication.com 127.0.0.1");
+            co.addArguments("--disable-extensions","--disable-background-networking","--no-sandbox","--disable-dev-shm-usage");
+            Configuration.browserCapabilities = co;
+        } else {
+            Configuration.browserCapabilities = new FirefoxOptions();
+        }
+        open(TestConfig.baseUrl());
+    }
+
     @AfterEach
-    void tearDown() {
+    final void tearDown() {
         Selenide.closeWebDriver();
     }
 }
-
-
-
-
-
-
