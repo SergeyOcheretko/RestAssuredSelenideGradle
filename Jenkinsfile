@@ -16,55 +16,69 @@ pipeline {
             }
         }
 
-       stage('Cleanup Docker') {
-           steps {
-               echo '🧼 Удаляем завершённые контейнеры (Windows CMD)...'
-            powershell '''
-            docker ps -a --filter "status=exited" -q | ForEach-Object {
-                Write-Host "🧹 Удаляем контейнер $_"
-                docker rm $_
+        stage('Cleanup Docker') {
+            steps {
+                echo '🧼 Удаляем завершённые контейнеры...'
+                powershell '''
+                docker ps -a --filter "status=exited" -q | ForEach-Object {
+                    Write-Host "🧹 Удаляем контейнер $_"
+                    docker rm $_
+                }
+                '''
             }
-            '''
-       }
-}
-  stage('Stop existing Selenium Grid') {
-    steps {
-        echo '🛑 Останавливаем текущую Selenium Grid (если есть)'
-        bat 'docker compose -f docker-compose.yml down || echo "Ничего не остановлено"'
-    }
-}
+        }
+
+        stage('Detect Port Conflict') {
+            steps {
+                echo '🔎 Проверяем занятость порта 4444...'
+                powershell '''
+                $used = netstat -an | findstr ":4444"
+                if ($used) {
+                    Write-Host "⚠️ Порт 4444 занят. Пробуем остановить контейнеры..."
+                    docker ps -q --filter "ancestor=selenium/hub:4.34.0" | ForEach-Object {
+                        docker stop $_
+                        docker rm $_
+                    }
+                }
+                '''
+            }
+        }
+
+        stage('Stop existing Selenium Grid') {
+            steps {
+                echo '🛑 Останавливаем Selenium Grid (если работает)...'
+                bat 'docker compose -f docker-compose.yml down --remove-orphans || echo "Нечего останавливать"'
+            }
+        }
+
         stage('Start Selenium Grid') {
             steps {
-                script {
-                    echo '🐳 Поднимаем Selenium Grid...'
-                    bat 'docker compose -f docker-compose.yml up -d'
-                }
+                echo '🐳 Запускаем Selenium Grid...'
+                bat 'docker compose -f docker-compose.yml up -d'
             }
         }
 
         stage('Wait Grid Ready') {
             steps {
-                script {
-                    powershell '''
-                    $attempt = 0
-                    do {
-                        $attempt++
-                        try {
-                            $r = Invoke-WebRequest -Uri "http://localhost:4444/wd/hub/status" -UseBasicParsing -TimeoutSec 5
-                            if ($r.Content -match '"ready":true') { exit 0 }
-                        } catch {}
-                        Start-Sleep -Seconds 2
-                    } while ($attempt -lt 30)
-                    Write-Error "Grid не стал ready за 60 с"
-                    exit 1
-                    '''
-                }
+                echo '⏳ Ожидаем готовность Selenium Grid...'
+                powershell '''
+                $attempt = 0
+                do {
+                    $attempt++
+                    try {
+                        $r = Invoke-WebRequest -Uri "http://localhost:4444/wd/hub/status" -UseBasicParsing -TimeoutSec 5
+                        if ($r.Content -match '"ready":true') { exit 0 }
+                    } catch {}
+                    Start-Sleep -Seconds 2
+                } while ($attempt -lt 30)
+                throw "❌ Selenium Grid не стал ready за 60 секунд"
+                '''
             }
         }
 
         stage('Clean Build') {
             steps {
-                echo '🧹 Выполняем gradle clean...'
+                echo '🧹 Gradle clean...'
                 bat 'call .\\gradlew clean --no-daemon --gradle-user-home=%GRADLE_USER_HOME%'
 
                 echo '🧹 Очищаем allure-results...'
@@ -78,7 +92,7 @@ pipeline {
 
         stage('UI Tests') {
             steps {
-                echo '🧪 Запускаем UI тесты на Grid...'
+                echo '🧪 UI тесты на Selenium Grid...'
                 bat '''
                 call .\\gradlew uiTest --console=plain --no-daemon ^
                 -Dwebdriver.remote.url=%GRID_URL% ^
@@ -89,21 +103,21 @@ pipeline {
 
         stage('API Tests') {
             steps {
-                echo '🌐 Запускаем API тесты...'
+                echo '🌐 Запуск API тестов...'
                 bat 'call .\\gradlew apiTest --console=plain --no-daemon --gradle-user-home=%GRADLE_USER_HOME%'
             }
         }
 
         stage('Allure Report') {
             steps {
-                echo '📊 Генерируем Allure отчёт...'
+                echo '📊 Генерация Allure отчёта...'
                 bat 'call .\\gradlew allureReport --console=plain --no-daemon --gradle-user-home=%GRADLE_USER_HOME%'
             }
         }
 
         stage('Publish Report') {
             steps {
-                echo '📤 Публикуем Allure отчёт...'
+                echo '📤 Публикация Allure отчёта...'
                 allure includeProperties: false, jdk: '', results: [[path: 'build/allure-results']]
             }
         }
@@ -114,6 +128,10 @@ pipeline {
             echo '📦 Архивируем JUnit и Allure HTML отчёт...'
             junit testResults: '**/build/test-results/test/*.xml', allowEmptyResults: true, skipMarkingBuildUnstable: true
             archiveArtifacts artifacts: 'build/allure-report/**', allowEmptyArchive: true
+
+            echo '📜 Сохраняем логи Selenium Grid...'
+            bat 'docker compose -f docker-compose.yml logs > build/docker-logs.txt'
+            archiveArtifacts artifacts: 'build/docker-logs.txt', allowEmptyArchive: true
         }
 
         cleanup {
