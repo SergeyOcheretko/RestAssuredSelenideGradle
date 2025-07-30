@@ -126,6 +126,15 @@ jobs:
           pattern: allure-report-*
           path: merged/allure-input
 
+      - name: 📦 Download Allure CLI
+        shell: pwsh
+        run: |
+          $version = "2.27.0"
+          $url = "https://github.com/allure-framework/allure2/releases/download/$version/allure-$version.zip"
+          Invoke-WebRequest -Uri $url -OutFile allure.zip
+          Expand-Archive allure.zip -DestinationPath allure
+          $env:PATH += ";$PWD\\allure\\bin"
+
       - name: 🧬 Merge Allure HTML reports
         shell: pwsh
         run: |
