@@ -1,13 +1,26 @@
-version: "3"
+networks:
+  default:
+    name: selenidegridnet
+
 services:
+  hub:
+    image: selenium/hub:4.34.0
+    ports:
+      - "4444:4444"
+    networks:
+      - default
+
   chrome:
     image: selenium/node-chrome:4.34.0
     shm_size: 2gb
     depends_on:
       - hub
     environment:
-      - HUB_HOST=hub
-      - HUB_PORT=4444
+      - SE_EVENT_BUS_HOST=hub
+      - SE_EVENT_BUS_PUBLISH_PORT=4442
+      - SE_EVENT_BUS_SUBSCRIBE_PORT=4443
+    networks:
+      - default
 
   firefox:
     image: selenium/node-firefox:4.34.0
@@ -15,10 +28,8 @@ services:
     depends_on:
       - hub
     environment:
-      - HUB_HOST=hub
-      - HUB_PORT=4444
-
-  hub:
-    image: selenium/hub:4.34.0
-    ports:
-      - "4444:4444"
+      - SE_EVENT_BUS_HOST=hub
+      - SE_EVENT_BUS_PUBLISH_PORT=4442
+      - SE_EVENT_BUS_SUBSCRIBE_PORT=4443
+    networks:
+      - default
