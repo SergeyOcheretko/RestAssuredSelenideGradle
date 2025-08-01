@@ -59,6 +59,12 @@ jobs:
         env:
           BROWSER: ${{ matrix.browser }}
 
+      - name: 📂 List Allure Results (UI)
+        shell: pwsh
+        run: |
+          Write-Host "📁 Contents of allure-results directory:"
+          Get-ChildItem -Recurse -Path build/allure-results | ForEach-Object { $_.FullName }
+
       - name: 🧩 Inject categories.json for Allure
         shell: pwsh
         run: copy src/test/resources/categories.json build/allure-results/categories.json
@@ -96,6 +102,12 @@ jobs:
 
       - name: 🌐 Run API tests
         run: ./gradlew apiTest --console=plain --no-daemon --gradle-user-home=%GRADLE_USER_HOME%
+
+      - name: 📂 List Allure Results (API)
+        shell: pwsh
+        run: |
+          Write-Host "📁 Contents of allure-results directory:"
+          Get-ChildItem -Recurse -Path build/allure-results | ForEach-Object { $_.FullName }
 
       - name: 🧩 Inject categories.json for Allure
         shell: pwsh
@@ -165,7 +177,6 @@ jobs:
         run: |
           $inputDirs = Get-ChildItem -Directory -Path merged/allure-input | Select-Object -ExpandProperty FullName
           & "$env:GITHUB_WORKSPACE/allure/bin/allure.bat" generate $inputDirs --clean -o build/reports/allure-report/allureReport
-
 
       - name: 🚀 Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
