@@ -98,12 +98,6 @@ jobs:
           name: allure-results-${{ matrix.browser }}
           path: build/allure-results
 
-      - name: 📦 Archive JUnit results
-        uses: actions/upload-artifact@v4
-        with:
-          name: junit-results-${{ matrix.browser }}
-          path: "**/test-results/**/*.xml"
-
   api-tests:
     runs-on: windows-latest
     needs: prepare-allure-cli
@@ -161,58 +155,57 @@ jobs:
           name: allure-results-api
           path: build/allure-results
 
-deploy-report:
-  runs-on: windows-latest
-  if: always()
-  needs: [ prepare-allure-cli, ui-tests, api-tests ]
+  deploy-report:
+    runs-on: windows-latest
+    if: always()
+    needs: [ prepare-allure-cli, ui-tests, api-tests ]
 
-  steps:
-    - uses: actions/checkout@v4
+    steps:
+      - uses: actions/checkout@v4
 
-    - name: 📦 Download Allure raw results
-      uses: actions/download-artifact@v4
-      with:
-        pattern: allure-results-*
-        path: merged/allure-results
+      - name: 📦 Download Allure raw results
+        uses: actions/download-artifact@v4
+        with:
+          pattern: allure-results-*
+          path: merged/allure-results
 
-    - name: 📦 Download Allure CLI
-      uses: actions/download-artifact@v4
-      with:
-        name: allure-cli
-        path: allure
+      - name: 📦 Download Allure CLI
+        uses: actions/download-artifact@v4
+        with:
+          name: allure-cli
+          path: allure
 
-    - name: 🔗 Add CLI to PATH
-      shell: pwsh
-      run: |
-        $cliBinPath = Resolve-Path "$env:GITHUB_WORKSPACE/allure/bin"
-        if (!(Test-Path "$cliBinPath/allure.bat")) {
-          Write-Error "❌ CLI binary not found"
-        }
-        $env:PATH += ";$cliBinPath"
+      - name: 🔗 Add CLI to PATH
+        shell: pwsh
+        run: |
+          $cliBinPath = Resolve-Path "$env:GITHUB_WORKSPACE/allure/bin"
+          if (!(Test-Path "$cliBinPath/allure.bat")) {
+            Write-Error "❌ CLI binary not found"
+          }
+          $env:PATH += ";$cliBinPath"
 
-    - name: 🧬 Merge raw Allure results
-      shell: pwsh
-      run: |
-        $inputDirs = Get-ChildItem -Directory -Path merged/allure-results | Select-Object -ExpandProperty FullName
-        & "$env:GITHUB_WORKSPACE/allure/bin/allure.bat" generate $inputDirs --clean -o build/reports/allure-report/allureReport
+      - name: 🧬 Merge raw Allure results
+        shell: pwsh
+        run: |
+          $inputDirs = Get-ChildItem -Directory -Path merged/allure-results | Select-Object -ExpandProperty FullName
+          & "$env:GITHUB_WORKSPACE/allure/bin/allure.bat" generate $inputDirs --clean -o build/reports/allure-report/allureReport
 
-    - name: 🧾 Inject merged executor.json
-      shell: pwsh
-      run: |
-        $json = @"
-        {
-          "name": "Merged Report",
-          "type": "GitHub Actions",
-          "url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
-          "buildOrder": 10
-        }
-        "@
-        New-Item -Path build/reports/allure-report/allureReport -ItemType Directory -Force
-        $json | Out-File -FilePath build/reports/allure-report/allureReport/executor.json -Encoding UTF8
+      - name: 🧾 Inject merged executor.json
+        shell: pwsh
+        run: |
+          $json = @"
+          {
+            "name": "Merged Report",
+            "type": "GitHub Actions",
+            "url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
+            "buildOrder": 10
+          }
+          "@
+          New-Item -Path build/reports/allure-report/allureReport -ItemType Directory -Force
+          $json | Out-File -FilePath build/reports/allure-report/allureReport/executor.json -Encoding UTF8
 
-    - name: 🚀 Deploy to GitHub Pages
-      uses: peaceiris/actions-gh-pages@v4
-      with:
-        personal_token: ${{ secrets.GH_PAGES_TOKEN }}
-        publish_dir: build/reports/allure-report/allureReport
-
+      - name: 🚀 Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          personal_token: ${{ secrets.GH_PAGES_TOKEN }}
+          publish_dir: build/reports/allure-report/allureReport
