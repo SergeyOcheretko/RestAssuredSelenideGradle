@@ -181,6 +181,19 @@ jobs:
           }
           $env:PATH += ";$cliBinPath"
 
+      - name: 🧬 Re-structure raw Allure results
+        shell: pwsh
+        run: |
+          $artifacts = Get-ChildItem -Directory merged/allure-results
+          foreach ($artifact in $artifacts) {
+            $nested = Join-Path $artifact.FullName "build/allure-results"
+            if (Test-Path $nested) {
+              Write-Host "📦 Flattening: $($nested)"
+              Move-Item "$nested/*" $artifact.FullName -Force
+              Remove-Item $nested -Recurse -Force
+            }
+          }
+
       - name: 📜 List all executor.json contents
         shell: pwsh
         run: |
