@@ -82,14 +82,17 @@ jobs:
       - name: 🧾 Inject executor.json
         shell: pwsh
         run: |
-          $json = @{
+          $executor = @{
             name       = "UI-${{ matrix.browser }}"
   type       = "GitHub Actions"
   url        = "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
   buildOrder = 1
   status     = "passed"
-  } | ConvertTo-Json -Depth 3
+  }
+
+  $json = $executor | ConvertTo-Json -Depth 3
   $json | Out-File -FilePath build/allure-results/executor.json -Encoding UTF8
+  Write-Output "executor.json generated successfully"
 
 - name: 📦 Upload UI allure results
   uses: actions/upload-artifact@v4
@@ -141,13 +144,12 @@ api-tests:
       - name: 🧾 Inject executor.json
         shell: pwsh
         run: |
-          $json = @{
-            name       = "API"
-  type       = "GitHub Actions"
-  url        = "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-  buildOrder = 1
-  status     = "passed"
-  } | ConvertTo-Json -Depth 3
+          $executor = @{
+            buildOrder = 1
+            status     = "passed"
+  }
+
+  $json = $executor | ConvertTo-Json -Depth 3
   $json | Out-File -FilePath build/allure-results/executor.json -Encoding UTF8
 
 - name: 📦 Upload API allure results
