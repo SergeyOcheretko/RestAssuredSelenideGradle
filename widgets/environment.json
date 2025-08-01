@@ -1,1 +1,1 @@
-[]
+[{"values":["UI-chrome","UI-firefox","API"],"name":"Job"},{"values":["Windows"],"name":"OS"},{"values":["GitHub Actions"],"name":"CI"},{"values":["chrome","firefox"],"name":"Browser"}]
