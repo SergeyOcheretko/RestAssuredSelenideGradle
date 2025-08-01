@@ -112,17 +112,12 @@ jobs:
           name: allure-cli
           path: allure
 
-      - name: 🔗 Add CLI to PATH (with fallback)
+      - name: 🔗 Add CLI to PATH (Windows-safe)
         shell: pwsh
         run: |
-          $cliBinPath = "$(Split-Path $env:GITHUB_WORKSPACE -Parent)\allure\bin"
-          if (!(Test-Path $cliBinPath)) {
-            $cliBinPath = "$env:GITHUB_WORKSPACE\allure\bin"
-          }
-          if (!(Test-Path $cliBinPath)) {
-            Write-Error "❌ Allure CLI path not found: $cliBinPath"
-          }
+          $cliBinPath = Resolve-Path "$env:GITHUB_WORKSPACE/allure/bin"
           $env:PATH += ";$cliBinPath"
+
 
       - name: 📊 Generate Allure report
         run: ./gradlew allureReport --console=plain --no-daemon --gradle-user-home=%GRADLE_USER_HOME%
