@@ -80,6 +80,12 @@ jobs:
           name: allure-report-${{ matrix.browser }}
           path: build/reports/allure-report/allureReport
 
+      - name: 📦 Upload raw allure-results
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-results-${{ matrix.browser }}
+          path: build/allure-results
+
       - name: 📦 Archive JUnit results
         uses: actions/upload-artifact@v4
         with:
@@ -116,6 +122,12 @@ jobs:
       - name: 🧩 Inject categories.json
         shell: pwsh
         run: copy src/test/resources/categories.json build/allure-results/categories.json
+
+      - name: 📦 Upload raw allure-results
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-results-api
+          path: build/allure-results
 
       - name: 📦 Download Allure CLI artifact
         uses: actions/download-artifact@v4
@@ -155,13 +167,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: 📦 Download Allure reports
+      - name: 📦 Download Allure HTML reports
         uses: actions/download-artifact@v4
         with:
           pattern: allure-report-*
           path: merged/allure-input
 
-      - name: 📦 Download Allure CLI artifact
+      - name: 📦 Download Allure CLI
         uses: actions/download-artifact@v4
         with:
           name: allure-cli
@@ -176,7 +188,7 @@ jobs:
           }
           $env:PATH += ";$cliBinPath"
 
-      - name: 🧬 Merge Allure HTML reports
+      - name: 🧬 Merge Allure reports
         shell: pwsh
         run: |
           $inputDirs = Get-ChildItem -Directory -Path merged/allure-input | Select-Object -ExpandProperty FullName
