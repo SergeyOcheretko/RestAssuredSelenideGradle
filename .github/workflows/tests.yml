@@ -74,12 +74,6 @@ jobs:
       - name: 📊 Generate Allure report
         run: ./gradlew allureReport --console=plain --no-daemon --gradle-user-home=%GRADLE_USER_HOME%
 
-      - name: 📤 Upload Allure HTML
-        uses: actions/upload-artifact@v4
-        with:
-          name: allure-report-${{ matrix.browser }}
-          path: build/reports/allure-report/allureReport
-
       - name: 📦 Upload raw allure-results
         uses: actions/upload-artifact@v4
         with:
@@ -129,36 +123,6 @@ jobs:
           name: allure-results-api
           path: build/allure-results
 
-      - name: 📦 Download Allure CLI artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: allure-cli
-          path: allure
-
-      - name: 🔗 Add CLI to PATH
-        shell: pwsh
-        run: |
-          $cliBinPath = Resolve-Path "$env:GITHUB_WORKSPACE/allure/bin"
-          if (!(Test-Path "$cliBinPath/allure.bat")) {
-            Write-Error "❌ CLI binary not found"
-          }
-          $env:PATH += ";$cliBinPath"
-
-      - name: 📊 Generate Allure report
-        run: ./gradlew allureReport --console=plain --no-daemon --gradle-user-home=%GRADLE_USER_HOME%
-
-      - name: 📤 Upload Allure HTML
-        uses: actions/upload-artifact@v4
-        with:
-          name: allure-report-api
-          path: build/reports/allure-report/allureReport
-
-      - name: 📦 Archive JUnit results
-        uses: actions/upload-artifact@v4
-        with:
-          name: junit-results-api
-          path: "**/test-results/**/*.xml"
-
   deploy-report:
     runs-on: windows-latest
     if: always()
@@ -167,11 +131,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: 📦 Download Allure HTML reports
+      - name: 📦 Download Allure raw results
         uses: actions/download-artifact@v4
         with:
-          pattern: allure-report-*
-          path: merged/allure-input
+          pattern: allure-results-*
+          path: merged/allure-results
 
       - name: 📦 Download Allure CLI
         uses: actions/download-artifact@v4
@@ -188,10 +152,10 @@ jobs:
           }
           $env:PATH += ";$cliBinPath"
 
-      - name: 🧬 Merge Allure reports
+      - name: 🧬 Merge raw Allure results
         shell: pwsh
         run: |
-          $inputDirs = Get-ChildItem -Directory -Path merged/allure-input | Select-Object -ExpandProperty FullName
+          $inputDirs = Get-ChildItem -Directory -Path merged/allure-results | Select-Object -ExpandProperty FullName
           & "$env:GITHUB_WORKSPACE/allure/bin/allure.bat" generate $inputDirs --clean -o build/reports/allure-report/allureReport
 
       - name: 🚀 Deploy to GitHub Pages
