@@ -85,15 +85,15 @@ jobs:
   url        = "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
   buildOrder = 1
   status     = "passed"
-  }
+}
   $json = $executor | ConvertTo-Json -Depth 3
   $json | Out-File -FilePath build/allure-results/executor.json -Encoding UTF8
 
-- name: 📦 Upload UI allure results
-  uses: actions/upload-artifact@v4
-  with:
-    name: allure-results-${{ matrix.browser }}
-    path: build/allure-results
+  - name: 📦 Upload UI allure results
+    uses: actions/upload-artifact@v4
+    with:
+      name: allure-results-${{ matrix.browser }}
+      path: build/allure-results
 
 api-tests:
   runs-on: windows-latest
@@ -145,15 +145,15 @@ api-tests:
   url        = "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
   buildOrder = 1
   status     = "passed"
-  }
+}
   $json = $executor | ConvertTo-Json -Depth 3
   $json | Out-File -FilePath build/allure-results/executor.json -Encoding UTF8
 
-- name: 📦 Upload API allure results
-  uses: actions/upload-artifact@v4
-  with:
-    name: allure-results-api
-    path: build/allure-results
+  - name: 📦 Upload API allure results
+    uses: actions/upload-artifact@v4
+    with:
+      name: allure-results-api
+      path: build/allure-results
 
 deploy-report:
   runs-on: windows-latest
