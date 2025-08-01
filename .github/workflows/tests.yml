@@ -32,13 +32,11 @@ jobs:
       matrix:
         browser: [ chrome, firefox ]
       fail-fast: false
-
+    name: UI Tests — ${{ matrix.browser }}
     env:
       JAVA_TOOL_OPTIONS: -Dfile.encoding=UTF-8
       GRADLE_USER_HOME: C:\temp\gradle-cache
       BROWSER: ${{ matrix.browser }}
-
-    name: UI Tests — ${{ matrix.browser }}
     steps:
       - uses: actions/setup-java@v4
         with:
@@ -54,8 +52,6 @@ jobs:
       - name: 🧪 Run UI tests
         shell: pwsh
         run: ./gradlew uiTest --console=plain --no-daemon --gradle-user-home="$env:GRADLE_USER_HOME"
-        env:
-          BROWSER: ${{ matrix.browser }}
 
       - name: ❌ Fail if no Allure results
         shell: pwsh
@@ -71,16 +67,14 @@ jobs:
 
       - name: 🧬 Inject environment.properties
         shell: pwsh
-      run: |
-        $envText = @"
-      Browser=${{ matrix.browser }}
-      Job=UI-${{ matrix.browser }}
-      OS=${{ runner.os }}
-      CI=GitHub Actions
-      "@
-
-        $envText | Out-File build/allure-results/environment.properties -Encoding UTF8
-
+        run: |
+          $envText = @"
+  Browser=${{ matrix.browser }}
+  Job=UI-${{ matrix.browser }}
+  OS=${{ runner.os }}
+  CI=GitHub Actions
+  "@
+          $envText | Out-File build/allure-results/environment.properties -Encoding UTF8
 
       - name: 🧾 Inject executor.json
         shell: pwsh
@@ -92,10 +86,8 @@ jobs:
   buildOrder = 1
   status     = "passed"
   }
-
   $json = $executor | ConvertTo-Json -Depth 3
   $json | Out-File -FilePath build/allure-results/executor.json -Encoding UTF8
-  Write-Output "executor.json generated successfully"
 
 - name: 📦 Upload UI allure results
   uses: actions/upload-artifact@v4
@@ -106,11 +98,10 @@ jobs:
 api-tests:
   runs-on: windows-latest
   needs: prepare-allure-cli
-
+  name: API Tests
   env:
     JAVA_TOOL_OPTIONS: -Dfile.encoding=UTF-8
     GRADLE_USER_HOME: C:\temp\gradle-cache
-
   steps:
     - uses: actions/setup-java@v4
       with:
@@ -138,20 +129,23 @@ api-tests:
     - name: 🧬 Inject environment.properties
       shell: pwsh
       run: |
-        @"
+        $envText = @"
   Job=API
   OS=${{ runner.os }}
   CI=GitHub Actions
-  "@ | Out-File build/allure-results/environment.properties -Encoding UTF8
+  "@
+          $envText | Out-File build/allure-results/environment.properties -Encoding UTF8
 
       - name: 🧾 Inject executor.json
         shell: pwsh
         run: |
           $executor = @{
-            buildOrder = 1
-            status     = "passed"
+            name       = "API"
+  type       = "GitHub Actions"
+  url        = "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+  buildOrder = 1
+  status     = "passed"
   }
-
   $json = $executor | ConvertTo-Json -Depth 3
   $json | Out-File -FilePath build/allure-results/executor.json -Encoding UTF8
 
@@ -165,7 +159,6 @@ deploy-report:
   runs-on: windows-latest
   if: always()
   needs: [ prepare-allure-cli, ui-tests, api-tests ]
-
   steps:
     - uses: actions/checkout@v4
 
@@ -219,13 +212,14 @@ deploy-report:
     - name: 🧾 Inject final merged executor.json
       shell: pwsh
       run: |
-        $json = @{
+        $executor = @{
           name       = "Merged Report"
           type       = "GitHub Actions"
           url        = "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           buildOrder = 10
           status     = "passed"
-        } | ConvertTo-Json -Depth 3
+        }
+        $json = $executor | ConvertTo-Json -Depth 3
         $json | Out-File -FilePath build/reports/allure-report/executor.json -Encoding UTF8
 
     - name: 🚀 Deploy to GitHub Pages
