@@ -164,7 +164,8 @@ jobs:
         shell: pwsh
         run: |
           $inputDirs = Get-ChildItem -Directory -Path merged/allure-input | Select-Object -ExpandProperty FullName
-          allure generate $inputDirs --clean -o build/reports/allure-report/allureReport
+          & "$env:GITHUB_WORKSPACE/allure/bin/allure.bat" generate $inputDirs --clean -o build/reports/allure-report/allureReport
+
 
       - name: 🚀 Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
