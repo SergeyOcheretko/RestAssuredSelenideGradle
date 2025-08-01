@@ -16,6 +16,8 @@ jobs:
           $url = "https://github.com/allure-framework/allure2/releases/download/$version/allure-$version.zip"
           Invoke-WebRequest -Uri $url -OutFile allure.zip
           Expand-Archive allure.zip -DestinationPath allure
+          Move-Item allure/allure-$version/* allure/ -Force
+          Remove-Item allure/allure-$version -Recurse -Force
 
       - name: 📤 Upload Allure CLI
         uses: actions/upload-artifact@v4
@@ -38,14 +40,12 @@ jobs:
 
     name: UI Tests — ${{ matrix.browser }}
     steps:
-      - name: ☕ Set up JDK 17
-        uses: actions/setup-java@v4
+      - uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: 📥 Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: 🧹 Clean build + clear allure-results
         shell: pwsh
@@ -61,14 +61,13 @@ jobs:
 
       - name: 🧩 Inject categories.json for Allure
         shell: pwsh
-        run: |
-          copy src/test/resources/categories.json build/allure-results/categories.json
+        run: copy src/test/resources/categories.json build/allure-results/categories.json
 
       - name: 📊 Generate Allure report
         run: ./gradlew allureReport --console=plain --no-daemon --gradle-user-home=%GRADLE_USER_HOME%
 
       - name: 📤 Upload Allure HTML
-        uses: actions/upload-artifact@v4.3.1
+        uses: actions/upload-artifact@v4
         with:
           name: allure-report-${{ matrix.browser }}
           path: build/reports/allure-report/allureReport
@@ -77,8 +76,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: junit-results-${{ matrix.browser }}
-          path: |
-            **/test-results/**/*.xml
+          path: "**/test-results/**/*.xml"
 
   api-tests:
     runs-on: windows-latest
@@ -89,22 +87,19 @@ jobs:
       GRADLE_USER_HOME: C:\temp\gradle-cache
 
     steps:
-      - name: ☕ Set up JDK 17
-        uses: actions/setup-java@v4
+      - uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: 📥 Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: 🌐 Run API tests
         run: ./gradlew apiTest --console=plain --no-daemon --gradle-user-home=%GRADLE_USER_HOME%
 
       - name: 🧩 Inject categories.json for Allure
         shell: pwsh
-        run: |
-          copy src/test/resources/categories.json build/allure-results/categories.json
+        run: copy src/test/resources/categories.json build/allure-results/categories.json
 
       - name: 📦 Download Allure CLI artifact
         uses: actions/download-artifact@v4
@@ -112,18 +107,20 @@ jobs:
           name: allure-cli
           path: allure
 
-      - name: 🔗 Add CLI to PATH (Windows-safe)
+      - name: 🔗 Add CLI to PATH
         shell: pwsh
         run: |
           $cliBinPath = Resolve-Path "$env:GITHUB_WORKSPACE/allure/bin"
+          if (!(Test-Path "$cliBinPath/allure.bat")) {
+            Write-Error "❌ CLI binary not found"
+          }
           $env:PATH += ";$cliBinPath"
-
 
       - name: 📊 Generate Allure report
         run: ./gradlew allureReport --console=plain --no-daemon --gradle-user-home=%GRADLE_USER_HOME%
 
       - name: 📤 Upload Allure HTML
-        uses: actions/upload-artifact@v4.3.1
+        uses: actions/upload-artifact@v4
         with:
           name: allure-report-api
           path: build/reports/allure-report/allureReport
@@ -132,8 +129,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: junit-results-api
-          path: |
-            **/test-results/**/*.xml
+          path: "**/test-results/**/*.xml"
 
   deploy-report:
     runs-on: windows-latest
@@ -141,8 +137,7 @@ jobs:
     needs: [ prepare-allure-cli, ui-tests, api-tests ]
 
     steps:
-      - name: 📥 Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: 📦 Download Allure reports
         uses: actions/download-artifact@v4
@@ -156,15 +151,14 @@ jobs:
           name: allure-cli
           path: allure
 
-      - name: 🔗 Add CLI to PATH (adjusted fallback)
+      - name: 🔗 Add CLI to PATH
         shell: pwsh
         run: |
-          $cliBinPath = Resolve-Path "$env:GITHUB_WORKSPACE\..\..\allure\bin"
-          if (!(Test-Path $cliBinPath)) {
-            Write-Error "❌ Allure CLI path not found: $cliBinPath"
+          $cliBinPath = Resolve-Path "$env:GITHUB_WORKSPACE/allure/bin"
+          if (!(Test-Path "$cliBinPath/allure.bat")) {
+            Write-Error "❌ CLI binary not found"
           }
           $env:PATH += ";$cliBinPath"
-
 
       - name: 🧬 Merge Allure HTML reports
         shell: pwsh
