@@ -101,4 +101,7 @@ tasks.withType(Test).configureEach {
         }
     }
 }
+tasks.named("allureReport") {
+    dependsOn("uiTest", "apiTest")
+}
 

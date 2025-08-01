@@ -47,7 +47,7 @@ jobs:
 
       - uses: actions/checkout@v4
 
-      - name: 🧹 Clean build + clear allure-results
+      - name: 🧹 Clean build + prepare allure-results
         shell: pwsh
         run: |
           ./gradlew clean --no-daemon --gradle-user-home="$env:GRADLE_USER_HOME"
@@ -59,13 +59,15 @@ jobs:
         env:
           BROWSER: ${{ matrix.browser }}
 
-      - name: 📂 List Allure Results (UI)
+      - name: ❌ Fail if no Allure results
         shell: pwsh
         run: |
-          Write-Host "📁 Contents of allure-results directory:"
-          Get-ChildItem -Recurse -Path build/allure-results | ForEach-Object { $_.FullName }
+          if ((Get-ChildItem -Path build/allure-results -Filter *.json).Count -eq 0) {
+            Write-Error "❌ No allure result files found"
+            exit 1
+          }
 
-      - name: 🧩 Inject categories.json for Allure
+      - name: 🧩 Inject categories.json
         shell: pwsh
         run: copy src/test/resources/categories.json build/allure-results/categories.json
 
@@ -100,16 +102,18 @@ jobs:
 
       - uses: actions/checkout@v4
 
-      - name: 🌐 Run API tests
+      - name: 🧪 Run API tests
         run: ./gradlew apiTest --console=plain --no-daemon --gradle-user-home=%GRADLE_USER_HOME%
 
-      - name: 📂 List Allure Results (API)
+      - name: ❌ Fail if no Allure results
         shell: pwsh
         run: |
-          Write-Host "📁 Contents of allure-results directory:"
-          Get-ChildItem -Recurse -Path build/allure-results | ForEach-Object { $_.FullName }
+          if ((Get-ChildItem -Path build/allure-results -Filter *.json).Count -eq 0) {
+            Write-Error "❌ No allure result files found"
+            exit 1
+          }
 
-      - name: 🧩 Inject categories.json for Allure
+      - name: 🧩 Inject categories.json
         shell: pwsh
         run: copy src/test/resources/categories.json build/allure-results/categories.json
 
