@@ -71,13 +71,16 @@ jobs:
 
       - name: 🧬 Inject environment.properties
         shell: pwsh
-        run: |
-          @"
-  Browser=${{ matrix.browser }}
-  Job=UI-${{ matrix.browser }}
-  OS=${{ runner.os }}
-  CI=GitHub Actions
-  "@ | Out-File build/allure-results/environment.properties -Encoding UTF8
+      run: |
+        $envText = @"
+      Browser=${{ matrix.browser }}
+      Job=UI-${{ matrix.browser }}
+      OS=${{ runner.os }}
+      CI=GitHub Actions
+      "@
+
+        $envText | Out-File build/allure-results/environment.properties -Encoding UTF8
+
 
       - name: 🧾 Inject executor.json
         shell: pwsh
