@@ -47,12 +47,9 @@ jobs:
 
       - uses: actions/checkout@v4
 
-      - name: 🧹 Clean build + prepare allure-results
+      - name: 🧹 Clean build
         shell: pwsh
-        run: |
-          ./gradlew clean --no-daemon --gradle-user-home="$env:GRADLE_USER_HOME"
-          Remove-Item -Path "build\allure-results" -Recurse -Force -ErrorAction SilentlyContinue
-          New-Item -ItemType Directory -Path "build/allure-results" -Force
+        run: ./gradlew clean --no-daemon --gradle-user-home="$env:GRADLE_USER_HOME"
 
       - name: 🧪 Run UI tests
         run: ./gradlew uiTest --console=plain --no-daemon --gradle-user-home=%GRADLE_USER_HOME%
@@ -92,17 +89,11 @@ jobs:
           "@
           $json | Out-File -FilePath build/allure-results/executor.json -Encoding UTF8
 
-      - name: 📦 Upload raw allure-results
+      - name: 📦 Upload allure-results
         uses: actions/upload-artifact@v4
         with:
           name: allure-results-${{ matrix.browser }}
           path: build/allure-results
-
-      - name: 📦 Archive JUnit results
-        uses: actions/upload-artifact@v4
-        with:
-          name: junit-results-${{ matrix.browser }}
-          path: "**/test-results/**/*.xml"
 
   api-tests:
     runs-on: windows-latest
@@ -155,7 +146,7 @@ jobs:
           "@
           $json | Out-File -FilePath build/allure-results/executor.json -Encoding UTF8
 
-      - name: 📦 Upload raw allure-results
+      - name: 📦 Upload allure-results
         uses: actions/upload-artifact@v4
         with:
           name: allure-results-api
@@ -185,16 +176,25 @@ jobs:
         shell: pwsh
         run: |
           $cliBinPath = Resolve-Path "$env:GITHUB_WORKSPACE/allure/bin"
-          if (!(Test-Path "$cliBinPath/allure.bat")) {
-            Write-Error "❌ CLI binary not found"
-          }
           $env:PATH += ";$cliBinPath"
 
-      - name: 🧬 Merge raw Allure results
+      - name: 🕵️ Проверка executor.json
+        shell: pwsh
+        run: |
+          $files = Get-ChildItem -Recurse -Path merged/allure-results -Filter executor.json
+          if ($files.Count -eq 0) {
+            Write-Warning "⚠️ Ни одного executor.json не найдено"
+          }
+          foreach ($file in $files) {
+            Write-Host "`n--- Found executor.json: $($file.FullName) ---"
+            Get-Content $file.FullName | Write-Host
+          }
+
+      - name: 🧬 Generate merged report
         shell: pwsh
         run: |
           $inputDirs = Get-ChildItem -Directory -Path merged/allure-results | Select-Object -ExpandProperty FullName
-          & "$env:GITHUB_WORKSPACE/allure/bin/allure.bat" generate $inputDirs --clean -o build/reports/allure-report/allureReport
+          allure generate $inputDirs --clean -o build/reports/allure-report/allureReport
 
       - name: 🚀 Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
