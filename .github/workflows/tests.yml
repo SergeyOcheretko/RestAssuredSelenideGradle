@@ -98,7 +98,6 @@ jobs:
             status     = "passed"
           }
           $executor | ConvertTo-Json -Depth 3 | Out-File build/allure-results/executor.json -Encoding UTF8
-          Get-Content build/allure-results/executor.json
 
       - name: 📦 Upload UI results
         uses: actions/upload-artifact@v4
@@ -172,7 +171,6 @@ jobs:
             status     = "passed"
           }
           $executor | ConvertTo-Json -Depth 3 | Out-File build/allure-results/executor.json -Encoding UTF8
-          Get-Content build/allure-results/executor.json
 
       - name: 📦 Upload API results
         uses: actions/upload-artifact@v4
