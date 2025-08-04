@@ -42,18 +42,22 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
       - uses: actions/checkout@v4
+
       - name: 🧪 Run UI tests
         shell: pwsh
         run: ./gradlew uiTest --no-daemon --console=plain --gradle-user-home="$env:GRADLE_USER_HOME"
+
       - name: ❌ Fail if no Allure results
         shell: pwsh
         run: |
           if ((Get-ChildItem build/allure-results -Filter *.json).Count -eq 0) {
             Write-Error "❌ No allure result files found"; exit 1
           }
+
       - name: 🧩 Inject categories.json
         shell: pwsh
         run: copy src/test/resources/categories.json build/allure-results/categories.json
+
       - name: 🧬 Inject environment.properties
         shell: pwsh
         run: |
@@ -78,17 +82,18 @@ jobs:
             const job = data.jobs.find(j => j.name === jobName);
             core.setOutput('id', job.id);
 
-      - name: 🧾 Inject clickable executor.json
+      - name: 🧾 Inject clean clickable executor.json
         shell: pwsh
         run: |
           $buildUrl = "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}/jobs/${{ steps.job.outputs.id }}"
-          @{
+          $json = @{
             name       = "UI-${{ matrix.browser }}"
             type       = "GitHub Actions"
             buildUrl   = $buildUrl
             buildOrder = if ("${{ matrix.browser }}" -eq "chrome") { 1 } else { 2 }
             status     = "passed"
-          } | ConvertTo-Json -Depth 3 | Out-File build/allure-results/executor.json -Encoding UTF8
+          }
+          $json | ConvertTo-Json -Depth 3 | Out-File build/allure-results/executor.json -Encoding utf8 -NoNewline
 
       - name: 📦 Upload UI results
         uses: actions/upload-artifact@v4
@@ -109,18 +114,22 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
       - uses: actions/checkout@v4
+
       - name: 🧪 Run API tests
         shell: pwsh
         run: ./gradlew apiTest --no-daemon --console=plain --gradle-user-home="$env:GRADLE_USER_HOME"
+
       - name: ❌ Fail if no Allure results
         shell: pwsh
         run: |
           if ((Get-ChildItem build/allure-results -Filter *.json).Count -eq 0) {
             Write-Error "❌ No allure result files found"; exit 1
           }
+
       - name: 🧩 Inject categories.json
         shell: pwsh
         run: copy src/test/resources/categories.json build/allure-results/categories.json
+
       - name: 🧬 Inject environment.properties
         shell: pwsh
         run: |
@@ -144,22 +153,23 @@ jobs:
             const job = data.jobs.find(j => j.name === jobName);
             core.setOutput('id', job.id);
 
-      - name: 🧾 Inject clickable executor.json
+      - name: 🧾 Inject clean clickable executor.json
         shell: pwsh
         run: |
           $buildUrl = "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}/jobs/${{ steps.job.outputs.id }}"
-          @{
+          $json = @{
             name       = "API"
             type       = "GitHub Actions"
             buildUrl   = $buildUrl
             buildOrder = 3
             status     = "passed"
-          } | ConvertTo-Json -Depth 3 | Out-File build/allure-results/executor.json -Encoding UTF8
+          }
+          $json | ConvertTo-Json -Depth 3 | Out-File build/allure-results/executor.json -Encoding utf8 -NoNewline
 
       - name: 📦 Upload API results
         uses: actions/upload-artifact@v4
         with:
-          name: allure-results-api"
+          name: allure-results-api
           path: build/allure-results
 
   deploy-report:
