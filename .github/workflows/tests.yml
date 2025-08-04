@@ -93,7 +93,7 @@ jobs:
           $executor = @{
             name       = "UI-${{ matrix.browser }}"
             type       = "GitHub Actions"
-            buildUrl   = "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/job/${{ steps.job.outputs.id }}"
+            buildUrl = "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/job/${{ steps.job.outputs.id }}"
             buildOrder = $buildOrder
             status     = "passed"
           }
@@ -167,7 +167,7 @@ jobs:
           $executor = @{
             name       = "API"
             type       = "GitHub Actions"
-            buildUrl   = "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/job/${{ steps.job.outputs.id }}"
+            buildUrl = "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/job/${{ steps.job.outputs.id }}"
             buildOrder = 3
             status     = "passed"
           }
