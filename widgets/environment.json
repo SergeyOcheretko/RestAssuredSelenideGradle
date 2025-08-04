@@ -1,1 +1,1 @@
-[{"values":["UI-firefox","API"],"name":"Job"},{"values":["Windows"],"name":"OS"},{"values":["GitHub Actions"],"name":"CI"},{"values":["firefox"],"name":"Browser"}]
+[{"values":["chrome","firefox"],"name":"Browser"},{"values":["UI-chrome","UI-firefox"],"name":"Job"},{"values":["Windows"],"name":"OS"},{"values":["GitHub Actions"],"name":"CI"}]
