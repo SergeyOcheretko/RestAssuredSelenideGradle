@@ -67,73 +67,73 @@ jobs:
 
       - name: 🧬 Inject environment.properties
         shell: pwsh
-      run: |
-        $envText = @"
-        Browser=${'${{ matrix.browser }}'}
-        Job=UI-${'${{ matrix.browser }}'}
-        OS=${{ runner.os }}
-        CI=GitHub Actions
-        "@
-        $envText | Out-File build/allure-results/environment.properties -Encoding UTF8
+        run: |
+          $envText = @"
+          Browser=${'${{ matrix.browser }}'}
+          Job=UI-${'${{ matrix.browser }}'}
+          OS=${{ runner.os }}
+          CI=GitHub Actions
+          "@
+          $envText | Out-File build/allure-results/environment.properties -Encoding UTF8
 
-        - name: 🧾 Inject executor.json
+      - name: 🧾 Inject executor.json
         shell: pwsh
         run: |
           $executor = @{
             name       = "UI-${{ matrix.browser }}"
-  type       = "GitHub Actions"
-  url        = "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-  buildOrder = 1
-  status     = "passed"
-}
-  $json = $executor | ConvertTo-Json -Depth 3
-  $json | Out-File -FilePath build/allure-results/executor.json -Encoding UTF8
+            type       = "GitHub Actions"
+            url        = "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            buildOrder = 1
+            status     = "passed"
+          }
+          $json = $executor | ConvertTo-Json -Depth 3
+          $json | Out-File -FilePath build/allure-results/executor.json -Encoding UTF8
 
-  - name: 📦 Upload UI allure results
-    uses: actions/upload-artifact@v4
-    with:
-      name: allure-results-${{ matrix.browser }}
-      path: build/allure-results
+      - name: 📦 Upload UI allure results
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-results-${{ matrix.browser }}
+          path: build/allure-results
 
-api-tests:
-  runs-on: windows-latest
-  needs: prepare-allure-cli
-  name: API Tests
-  env:
-    JAVA_TOOL_OPTIONS: -Dfile.encoding=UTF-8
-    GRADLE_USER_HOME: C:\temp\gradle-cache
-  steps:
-    - uses: actions/setup-java@v4
-      with:
-        distribution: 'temurin'
-        java-version: '17'
+  api-tests:
+    runs-on: windows-latest
+    needs: prepare-allure-cli
+    name: API Tests
+    env:
+      JAVA_TOOL_OPTIONS: -Dfile.encoding=UTF-8
+      GRADLE_USER_HOME: C:\temp\gradle-cache
+    steps:
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
 
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: 🧪 Run API tests
-      shell: pwsh
-      run: ./gradlew apiTest --console=plain --no-daemon --gradle-user-home="$env:GRADLE_USER_HOME"
+      - name: 🧪 Run API tests
+        shell: pwsh
+        run: ./gradlew apiTest --console=plain --no-daemon --gradle-user-home="$env:GRADLE_USER_HOME"
 
-    - name: ❌ Fail if no Allure results
-      shell: pwsh
-      run: |
-        if ((Get-ChildItem -Path build/allure-results -Filter *.json).Count -eq 0) {
-          Write-Error "❌ No allure result files found"
-          exit 1
-        }
+      - name: ❌ Fail if no Allure results
+        shell: pwsh
+        run: |
+          if ((Get-ChildItem -Path build/allure-results -Filter *.json).Count -eq 0) {
+            Write-Error "❌ No allure result files found"
+            exit 1
+          }
 
-    - name: 🧩 Inject categories.json
-      shell: pwsh
-      run: copy src/test/resources/categories.json build/allure-results/categories.json
+      - name: 🧩 Inject categories.json
+        shell: pwsh
+        run: copy src/test/resources/categories.json build/allure-results/categories.json
 
-    - name: 🧬 Inject environment.properties
-      shell: pwsh
-      run: |
-        $envText = @"
-  Job=API
-  OS=${{ runner.os }}
-  CI=GitHub Actions
-  "@
+      - name: 🧬 Inject environment.properties
+        shell: pwsh
+        run: |
+          $envText = @"
+          Job=API
+          OS=${{ runner.os }}
+          CI=GitHub Actions
+          "@
           $envText | Out-File build/allure-results/environment.properties -Encoding UTF8
 
       - name: 🧾 Inject executor.json
@@ -141,89 +141,89 @@ api-tests:
         run: |
           $executor = @{
             name       = "API"
-  type       = "GitHub Actions"
-  url        = "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-  buildOrder = 1
-  status     = "passed"
-}
-  $json = $executor | ConvertTo-Json -Depth 3
-  $json | Out-File -FilePath build/allure-results/executor.json -Encoding UTF8
-
-  - name: 📦 Upload API allure results
-    uses: actions/upload-artifact@v4
-    with:
-      name: allure-results-api
-      path: build/allure-results
-
-deploy-report:
-  runs-on: windows-latest
-  if: always()
-  needs: [ prepare-allure-cli, ui-tests, api-tests ]
-  steps:
-    - uses: actions/checkout@v4
-
-    - name: 📦 Download Allure results
-      uses: actions/download-artifact@v4
-      with:
-        pattern: allure-results-*
-        path: merged/allure-results
-
-    - name: 📦 Download Allure CLI
-      uses: actions/download-artifact@v4
-      with:
-        name: allure-cli
-        path: allure
-
-    - name: 🔗 Add CLI to PATH
-      shell: pwsh
-      run: |
-        $cliBinPath = Resolve-Path "$env:GITHUB_WORKSPACE/allure/bin"
-        if (!(Test-Path "$cliBinPath/allure.bat")) {
-          Write-Error "❌ CLI binary not found"
-        }
-        $env:PATH += ";$cliBinPath"
-
-    - name: 🧬 Flatten nested result folders
-      shell: pwsh
-      run: |
-        Get-ChildItem -Directory merged/allure-results | ForEach-Object {
-          $nested = Join-Path $_.FullName "build/allure-results"
-          if (Test-Path $nested) {
-            Move-Item "$nested/*" $_.FullName -Force
-            Remove-Item $nested -Recurse -Force
+            type       = "GitHub Actions"
+            url        = "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            buildOrder = 1
+            status     = "passed"
           }
-        }
+          $json = $executor | ConvertTo-Json -Depth 3
+          $json | Out-File -FilePath build/allure-results/executor.json -Encoding UTF8
 
-    - name: 📜 Log executor.json contents
-      shell: pwsh
-      run: |
-        Get-ChildItem -Recurse -Path merged/allure-results -Filter executor.json |
-        ForEach-Object {
-          Write-Host "`n--- Executor file: $($_.FullName) ---"
-          Get-Content $_.FullName
-        }
+      - name: 📦 Upload API allure results
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-results-api
+          path: build/allure-results
 
-    - name: 🧬 Merge Allure reports
-      shell: pwsh
-      run: |
-        $inputDirs = Get-ChildItem -Directory -Path merged/allure-results | Select-Object -ExpandProperty FullName
-        allure generate $inputDirs --clean -o build/reports/allure-report
+  deploy-report:
+    runs-on: windows-latest
+    if: always()
+    needs: [ prepare-allure-cli, ui-tests, api-tests ]
+    steps:
+      - uses: actions/checkout@v4
 
-    - name: 🧾 Inject final merged executor.json
-      shell: pwsh
-      run: |
-        $executor = @{
-          name       = "Merged Report"
-          type       = "GitHub Actions"
-          url        = "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          buildOrder = 10
-          status     = "passed"
-        }
-        $json = $executor | ConvertTo-Json -Depth 3
-        $json | Out-File -FilePath build/reports/allure-report/executor.json -Encoding UTF8
+      - name: 📦 Download Allure results
+        uses: actions/download-artifact@v4
+        with:
+          pattern: allure-results-*
+          path: merged/allure-results
 
-    - name: 🚀 Deploy to GitHub Pages
-      uses: peaceiris/actions-gh-pages@v4
-      with:
-        personal_token: ${{ secrets.GH_PAGES_TOKEN }}
-        publish_dir: build/reports/allure-report
+      - name: 📦 Download Allure CLI
+        uses: actions/download-artifact@v4
+        with:
+          name: allure-cli
+          path: allure
+
+      - name: 🔗 Add CLI to PATH
+        shell: pwsh
+        run: |
+          $cliBinPath = Resolve-Path "$env:GITHUB_WORKSPACE/allure/bin"
+          if (!(Test-Path "$cliBinPath/allure.bat")) {
+            Write-Error "❌ CLI binary not found"
+          }
+          $env:PATH += ";$cliBinPath"
+
+      - name: 🧬 Flatten nested result folders
+        shell: pwsh
+        run: |
+          Get-ChildItem -Directory merged/allure-results | ForEach-Object {
+            $nested = Join-Path $_.FullName "build/allure-results"
+            if (Test-Path $nested) {
+              Move-Item "$nested/*" $_.FullName -Force
+              Remove-Item $nested -Recurse -Force
+            }
+          }
+
+      - name: 📜 Log executor.json contents
+        shell: pwsh
+        run: |
+          Get-ChildItem -Recurse -Path merged/allure-results -Filter executor.json |
+          ForEach-Object {
+            Write-Host "`n--- Executor file: $($_.FullName) ---"
+            Get-Content $_.FullName
+          }
+
+      - name: 🧬 Merge Allure reports
+        shell: pwsh
+        run: |
+          $inputDirs = Get-ChildItem -Directory -Path merged/allure-results | Select-Object -ExpandProperty FullName
+          allure generate $inputDirs --clean -o build/reports/allure-report
+
+      - name: 🧾 Inject final merged executor.json
+        shell: pwsh
+        run: |
+          $executor = @{
+            name       = "Merged Report"
+            type       = "GitHub Actions"
+            url        = "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            buildOrder = 10
+            status     = "passed"
+          }
+          $json = $executor | ConvertTo-Json -Depth 3
+          $json | Out-File -FilePath build/reports/allure-report/executor.json -Encoding UTF8
+
+      - name: 🚀 Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          personal_token: ${{ secrets.GH_PAGES_TOKEN }}
+          publish_dir: build/reports/allure-report
