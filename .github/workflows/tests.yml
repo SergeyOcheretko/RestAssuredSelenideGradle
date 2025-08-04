@@ -31,6 +31,7 @@ jobs:
     strategy:
       matrix:
         browser: [ chrome, firefox ]
+        browser_index: [ 1, 2 ]
       fail-fast: false
     name: UI Tests — ${{ matrix.browser }}
     env:
@@ -86,17 +87,19 @@ jobs:
             if (!job) throw new Error(`Job "${jobName}" not found`);
             core.setOutput('id', job.id);
 
-      - name: 🧾 Inject executor.json with clickable URL
+      - name: 🧾 Inject executor.json with clickable URL and unique buildOrder
         shell: pwsh
         run: |
+          $buildOrder = if ("${{ matrix.browser }}" -eq "chrome") { 1 } else { 2 }
           $executor = @{
             name       = "UI-${{ matrix.browser }}"
             type       = "GitHub Actions"
             buildUrl   = "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/job/${{ steps.job.outputs.id }}"
-            buildOrder = 1
+            buildOrder = $buildOrder
             status     = "passed"
           }
           $executor | ConvertTo-Json -Depth 3 | Out-File build/allure-results/executor.json -Encoding UTF8
+          Get-Content build/allure-results/executor.json
 
       - name: 📦 Upload UI results
         uses: actions/upload-artifact@v4
@@ -159,17 +162,18 @@ jobs:
             if (!job) throw new Error(`Job "${jobName}" not found`);
             core.setOutput('id', job.id);
 
-      - name: 🧾 Inject executor.json with clickable URL
+      - name: 🧾 Inject executor.json with clickable URL and unique buildOrder
         shell: pwsh
         run: |
           $executor = @{
             name       = "API"
             type       = "GitHub Actions"
             buildUrl   = "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/job/${{ steps.job.outputs.id }}"
-            buildOrder = 1
+            buildOrder = 3
             status     = "passed"
           }
           $executor | ConvertTo-Json -Depth 3 | Out-File build/allure-results/executor.json -Encoding UTF8
+          Get-Content build/allure-results/executor.json
 
       - name: 📦 Upload API results
         uses: actions/upload-artifact@v4
@@ -183,6 +187,10 @@ jobs:
     needs: [ prepare-allure-cli, ui-tests, api-tests ]
     steps:
       - uses: actions/checkout@v4
+
+      - name: 🧹 Clean previous report
+        run: Remove-Item -Recurse -Force build/reports/allure-report -ErrorAction SilentlyContinue
+        shell: pwsh
 
       - name: 📦 Download results
         uses: actions/download-artifact@v4
