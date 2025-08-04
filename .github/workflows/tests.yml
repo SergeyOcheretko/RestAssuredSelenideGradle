@@ -98,7 +98,7 @@ jobs:
       - name: 📦 Upload UI results
         uses: actions/upload-artifact@v4
         with:
-          name: allure-results-${{ matrix.browser }}"
+          name: allure-results-${{ matrix.browser }}
           path: build/allure-results
 
   api-tests:
@@ -169,7 +169,7 @@ jobs:
       - name: 📦 Upload API results
         uses: actions/upload-artifact@v4
         with:
-          name: allure-results-api"
+          name: allure-results-api
           path: build/allure-results
 
   deploy-report:
