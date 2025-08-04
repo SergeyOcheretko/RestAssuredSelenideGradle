@@ -71,13 +71,28 @@ jobs:
           CI=GitHub Actions
           "@ | Out-File build/allure-results/environment.properties -Encoding UTF8
 
-      - name: 🧾 Inject executor.json
+      - name: 🆔 Get current job id
+        id: job
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const jobName = 'UI Tests — ${{ matrix.browser }}';
+            const { data } = await github.rest.actions.listJobsForWorkflowRun({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: context.runId,
+            });
+            const job = data.jobs.find(j => j.name === jobName);
+            if (!job) throw new Error(`Job "${jobName}" not found`);
+            core.setOutput('id', job.id);
+
+      - name: 🧾 Inject executor.json with clickable URL
         shell: pwsh
         run: |
           $executor = @{
             name       = "UI-${{ matrix.browser }}"
             type       = "GitHub Actions"
-            url        = "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            url        = "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/job/${{ steps.job.outputs.id }}"
             buildOrder = 1
             status     = "passed"
           }
@@ -129,13 +144,28 @@ jobs:
           CI=GitHub Actions
           "@ | Out-File build/allure-results/environment.properties -Encoding UTF8
 
-      - name: 🧾 Inject executor.json
+      - name: 🆔 Get current job id
+        id: job
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const jobName = 'API Tests';
+            const { data } = await github.rest.actions.listJobsForWorkflowRun({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: context.runId,
+            });
+            const job = data.jobs.find(j => j.name === jobName);
+            if (!job) throw new Error(`Job "${jobName}" not found`);
+            core.setOutput('id', job.id);
+
+      - name: 🧾 Inject executor.json with clickable URL
         shell: pwsh
         run: |
           $executor = @{
             name       = "API"
             type       = "GitHub Actions"
-            url        = "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            url        = "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/job/${{ steps.job.outputs.id }}"
             buildOrder = 1
             status     = "passed"
           }
