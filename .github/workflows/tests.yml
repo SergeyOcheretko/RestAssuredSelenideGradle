@@ -31,7 +31,6 @@ jobs:
     strategy:
       matrix:
         browser: [ chrome, firefox ]
-        browser_index: [ 1, 2 ]
       fail-fast: false
     name: UI Tests — ${{ matrix.browser }}
     env:
