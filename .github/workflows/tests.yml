@@ -196,7 +196,7 @@ jobs:
           name: allure-cli
           path: allure
 
-      - name: 🔗 Generate report (no --clean)
+      - name: 🔗 Generate report (keep all executor.json)
         shell: pwsh
         run: |
           $cliBin = "$env:GITHUB_WORKSPACE\allure\bin"
@@ -204,26 +204,6 @@ jobs:
 
           $inputDirs = (Get-ChildItem -Directory "merged/allure-results").FullName
           & $allureCmd generate $inputDirs -o build/reports/allure-report
-
-      - name: 📂 Copy every original executor.json
-        shell: pwsh
-        run: |
-          Get-ChildItem -Recurse -File -Filter executor.json "merged/allure-results" |
-            ForEach-Object {
-              $dest = "build/reports/allure-report/history/$($_.Directory.Name)_executor.json"
-              Copy-Item $_.FullName -Destination $dest -Force
-            }
-
-      - name: 🧾 Add merged executor.json (optional)
-        shell: pwsh
-        run: |
-          @{
-            name       = "Merged Report"
-            type       = "GitHub Actions"
-            url        = "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-            buildOrder = 10
-            status     = "passed"
-          } | ConvertTo-Json -Depth 3 | Out-File build/reports/allure-report/executor.json -Encoding UTF8
 
       - name: 🚀 Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
