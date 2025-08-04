@@ -87,7 +87,7 @@ jobs:
             status     = "passed"
           }
           $json = $executor | ConvertTo-Json -Depth 3
-          $json | Out-File -FilePath build/allure-results/executor.json -Encoding UTF8
+          $json | Out-File build/allure-results/executor.json -Encoding UTF8
 
       - name: 📦 Upload UI allure results
         uses: actions/upload-artifact@v4
@@ -147,7 +147,7 @@ jobs:
             status     = "passed"
           }
           $json = $executor | ConvertTo-Json -Depth 3
-          $json | Out-File -FilePath build/allure-results/executor.json -Encoding UTF8
+          $json | Out-File build/allure-results/executor.json -Encoding UTF8
 
       - name: 📦 Upload API allure results
         uses: actions/upload-artifact@v4
@@ -177,11 +177,20 @@ jobs:
       - name: 🔗 Add CLI to PATH
         shell: pwsh
         run: |
-          $cliBinPath = Resolve-Path "$env:GITHUB_WORKSPACE/allure/bin"
-          if (!(Test-Path "$cliBinPath/allure.bat")) {
-            Write-Error "❌ CLI binary not found"
+          $cliRoot = "$env:GITHUB_WORKSPACE/allure"
+          $cliBin = Join-Path $cliRoot "bin"
+
+          if (!(Test-Path "$cliBin/allure.bat")) {
+            Write-Error "❌ 'allure.bat' not found in $cliBin"
+            exit 1
           }
-          $env:PATH += ";$cliBinPath"
+
+          Write-Host "✅ CLI found at: $cliBin"
+          $env:PATH += ";$cliBin"
+          [System.Environment]::SetEnvironmentVariable("PATH", $env:PATH, [System.EnvironmentVariableTarget]::Process)
+
+          Write-Host "🔍 Checking Allure CLI version..."
+          & allure --version
 
       - name: 🧬 Flatten nested result folders
         shell: pwsh
