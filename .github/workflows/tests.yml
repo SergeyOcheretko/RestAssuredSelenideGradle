@@ -1,4 +1,4 @@
-name: CI — UI & API Tests with Allure
+name: CI — UI & API Tests with Allure (clickable executors)
 
 on:
   push:
@@ -196,7 +196,7 @@ jobs:
           name: allure-cli
           path: allure
 
-      - name: 🔗 Setup CLI and generate report
+      - name: 🔗 Setup CLI and generate report (NO --clean)
         shell: pwsh
         run: |
           $cliBin = "$env:GITHUB_WORKSPACE\\allure\\bin"
@@ -211,9 +211,9 @@ jobs:
           & $allureCmd --version
 
           $inputDirs = Get-ChildItem -Directory merged/allure-results | ForEach-Object { $_.FullName }
-          & $allureCmd generate $inputDirs --clean -o build/reports/allure-report
+          & $allureCmd generate $inputDirs -o build/reports/allure-report
 
-      - name: 🧾 Inject merged executor.json
+      - name: 🧾 Inject merged executor.json (общий)
         shell: pwsh
         run: |
           $executor = @{
