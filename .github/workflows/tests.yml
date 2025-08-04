@@ -196,34 +196,34 @@ jobs:
           name: allure-cli
           path: allure
 
-      - name: 🔗 Setup CLI and generate report (NO --clean)
+      - name: 🔗 Generate report (no --clean)
         shell: pwsh
         run: |
-          $cliBin = "$env:GITHUB_WORKSPACE\\allure\\bin"
+          $cliBin = "$env:GITHUB_WORKSPACE\allure\bin"
           $allureCmd = Join-Path $cliBin "allure.bat"
 
-          if (!(Test-Path $allureCmd)) {
-            Write-Error "❌ Allure CLI not found at $allureCmd"
-            exit 1
-          }
-
-          Write-Host "✅ CLI found: $allureCmd"
-          & $allureCmd --version
-
-          $inputDirs = Get-ChildItem -Directory merged/allure-results | ForEach-Object { $_.FullName }
+          $inputDirs = (Get-ChildItem -Directory "merged/allure-results").FullName
           & $allureCmd generate $inputDirs -o build/reports/allure-report
 
-      - name: 🧾 Inject merged executor.json (общий)
+      - name: 📂 Copy every original executor.json
         shell: pwsh
         run: |
-          $executor = @{
+          Get-ChildItem -Recurse -File -Filter executor.json "merged/allure-results" |
+            ForEach-Object {
+              $dest = "build/reports/allure-report/history/$($_.Directory.Name)_executor.json"
+              Copy-Item $_.FullName -Destination $dest -Force
+            }
+
+      - name: 🧾 Add merged executor.json (optional)
+        shell: pwsh
+        run: |
+          @{
             name       = "Merged Report"
             type       = "GitHub Actions"
             url        = "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
             buildOrder = 10
             status     = "passed"
-          }
-          $executor | ConvertTo-Json -Depth 3 | Out-File build/reports/allure-report/executor.json -Encoding UTF8
+          } | ConvertTo-Json -Depth 3 | Out-File build/reports/allure-report/executor.json -Encoding UTF8
 
       - name: 🚀 Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
