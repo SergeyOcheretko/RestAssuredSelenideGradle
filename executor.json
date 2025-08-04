@@ -1,7 +1,7 @@
 {
-  "name": "Merged Report",
+  "type": "GitHub Actions",
+  "url": "https://github.com/SergeyOcheretko/RestAssuredSelenideGradle/actions/runs/16722231629",
   "status": "passed",
   "buildOrder": 10,
-  "type": "GitHub Actions",
-  "url": "https://github.com/SergeyOcheretko/RestAssuredSelenideGradle/actions/runs/16721659168"
+  "name": "Merged Report"
 }
