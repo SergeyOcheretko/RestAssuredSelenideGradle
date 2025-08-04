@@ -229,7 +229,7 @@ jobs:
             status     = "passed"
           }
           $json = $executor | ConvertTo-Json -Depth 3
-          $json | Out-File -FilePath build/reports/allure-report/executor.json -Encoding UTF8
+          $json | Out-File build/reports/allure-report/executor.json -Encoding UTF8
 
       - name: 🚀 Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
