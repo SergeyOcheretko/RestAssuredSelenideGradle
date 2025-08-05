@@ -43,6 +43,7 @@ allure {
     }
 }
 
+// ---------- UI TEST: Chrome ----------
 tasks.register("uiTestChrome", Test) {
     description = "Run UI tests on Chrome"
     group = "verification"
@@ -54,17 +55,23 @@ tasks.register("uiTestChrome", Test) {
     outputs.upToDateWhen { false }
     doFirst {
         copy {
-            from 'src/test/resources/categories.json'
+            from "src/test/resources/categories.json"
             into "$buildDir/allure-results-chrome"
         }
         copy {
-            from 'src/test/resources/executor-chrome.json'
+            from "src/test/resources/executor-chrome.json"
             into "$buildDir/allure-results-chrome"
             rename('executor-chrome.json', 'executor.json')
+        }
+        copy {
+            from "src/test/resources/environment-chrome.properties"
+            into "$buildDir/allure-results-chrome"
+            rename('environment-chrome.properties', 'environment.properties')
         }
     }
 }
 
+// ---------- UI TEST: Firefox ----------
 tasks.register("uiTestFirefox", Test) {
     description = "Run UI tests on Firefox"
     group = "verification"
@@ -76,17 +83,23 @@ tasks.register("uiTestFirefox", Test) {
     outputs.upToDateWhen { false }
     doFirst {
         copy {
-            from 'src/test/resources/categories.json'
+            from "src/test/resources/categories.json"
             into "$buildDir/allure-results-firefox"
         }
         copy {
-            from 'src/test/resources/executor-firefox.json'
+            from "src/test/resources/executor-firefox.json"
             into "$buildDir/allure-results-firefox"
             rename('executor-firefox.json', 'executor.json')
+        }
+        copy {
+            from "src/test/resources/environment-firefox.properties"
+            into "$buildDir/allure-results-firefox"
+            rename('environment-firefox.properties', 'environment.properties')
         }
     }
 }
 
+// ---------- API TEST ----------
 tasks.register("apiTestRun", Test) {
     description = "Run API tests"
     group = "verification"
@@ -97,18 +110,33 @@ tasks.register("apiTestRun", Test) {
     outputs.upToDateWhen { false }
     doFirst {
         copy {
-            from 'src/test/resources/categories.json'
+            from "src/test/resources/categories.json"
             into "$buildDir/allure-results-api"
         }
         copy {
-            from 'src/test/resources/executor-api.json'
+            from "src/test/resources/executor-api.json"
             into "$buildDir/allure-results-api"
             rename('executor-api.json', 'executor.json')
+        }
+        copy {
+            from "src/test/resources/environment-api.properties"
+            into "$buildDir/allure-results-api"
+            rename('environment-api.properties', 'environment.properties')
         }
     }
 }
 
+// ---------- Combined Task ----------
+tasks.register("uiTest") {
+    description = "Run all UI tests"
+    group = "verification"
+    dependsOn("uiTestChrome", "uiTestFirefox")
+}
+
+// ---------- Merge and Generate Allure Report ----------
 tasks.register("generateMergedAllureReport") {
+    description = "Generate merged Allure report"
+    group = "verification"
     dependsOn("uiTestChrome", "uiTestFirefox", "apiTestRun")
     doLast {
         exec {
@@ -119,6 +147,11 @@ tasks.register("generateMergedAllureReport") {
                     '-o', "$buildDir/allure-report",
                     '--clean'
         }
+        println "✅ Allure report generated at $buildDir/allure-report"
     }
 }
 
+// ---------- Make Check Depend on Everything ----------
+tasks.named("check") {
+    dependsOn("generateMergedAllureReport")
+}
