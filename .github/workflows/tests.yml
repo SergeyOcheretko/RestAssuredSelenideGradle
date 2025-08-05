@@ -82,17 +82,20 @@ jobs:
             const job = data.jobs.find(j => j.name === jobName);
             core.setOutput('id', job.id);
 
-      - name: 🧾 Inject clean clickable executor.json
+      - name: 🧾 Inject executor.json (чистый)
         shell: pwsh
         run: |
-          $buildUrl = "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}/jobs/${{ steps.job.outputs.id }}"
-          @{
-            name       = "UI-${{ matrix.browser }}"
-            type       = "GitHub Actions"
-            buildUrl   = $buildUrl
-            buildOrder = if ("${{ matrix.browser }}" -eq "chrome") { 1 } else { 2 }
-            status     = "passed"
-          } | ConvertTo-Json -Depth 3 -Compress | Out-File -FilePath build/allure-results/executor.json -Encoding utf8 -NoNewline
+          $jobId = "${{ steps.job.outputs.id }}"
+          $json = @"
+          {
+            "name": "UI-${{ matrix.browser }}",
+            "type": "GitHub Actions",
+            "buildUrl": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}/jobs/$jobId",
+            "buildOrder": $([ "${{ matrix.browser }}" -eq 'chrome' ] && echo 1 || echo 2),
+            "status": "passed"
+          }
+          "@
+          $json | Out-File -FilePath build/allure-results/executor.json -Encoding utf8 -NoNewline
 
       - name: 📦 Upload UI results
         uses: actions/upload-artifact@v4
@@ -152,17 +155,20 @@ jobs:
             const job = data.jobs.find(j => j.name === jobName);
             core.setOutput('id', job.id);
 
-      - name: 🧾 Inject clean clickable executor.json
+      - name: 🧾 Inject executor.json (чистый)
         shell: pwsh
         run: |
-          $buildUrl = "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}/jobs/${{ steps.job.outputs.id }}"
-          @{
-            name       = "API"
-            type       = "GitHub Actions"
-            buildUrl   = $buildUrl
-            buildOrder = 3
-            status     = "passed"
-          } | ConvertTo-Json -Depth 3 -Compress | Out-File -FilePath build/allure-results/executor.json -Encoding utf8 -NoNewline
+          $jobId = "${{ steps.job.outputs.id }}"
+          $json = @"
+          {
+            "name": "API",
+            "type": "GitHub Actions",
+            "buildUrl": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}/jobs/$jobId",
+            "buildOrder": 3,
+            "status": "passed"
+          }
+          "@
+          $json | Out-File -FilePath build/allure-results/executor.json -Encoding utf8 -NoNewline
 
       - name: 📦 Upload API results
         uses: actions/upload-artifact@v4
