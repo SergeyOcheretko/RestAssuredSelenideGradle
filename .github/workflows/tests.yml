@@ -13,11 +13,11 @@ jobs:
         shell: pwsh
         run: |
           $version = "2.27.0"
-          $url = "https://github.com/allure-framework/allure2/releases/download/$version/allure-$version.zip"
-          Invoke-WebRequest -Uri $url -OutFile allure.zip
+          Invoke-WebRequest -Uri "https://github.com/allure-framework/allure2/releases/download/$version/allure-$version.zip" -OutFile allure.zip
           Expand-Archive allure.zip -DestinationPath allure
           Move-Item allure/allure-$version/* allure/ -Force
           Remove-Item allure/allure-$version -Recurse -Force
+
       - name: 📤 Upload Allure CLI
         uses: actions/upload-artifact@v4
         with:
@@ -183,7 +183,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           pattern: allure-results-*
-          path: merged/allure-results
+          path: merged
           merge-multiple: true
       - name: 📦 Download CLI
         uses: actions/download-artifact@v4
@@ -195,9 +195,10 @@ jobs:
         run: |
           $cliBin = "$env:GITHUB_WORKSPACE\allure\bin"
           $allureCmd = Join-Path $cliBin "allure.bat"
-          $inputDirs = (Get-ChildItem -Directory "merged/allure-results").FullName
-          if ($inputDirs.Count -eq 0) {
-            Write-Error "❌ Нет папок allure-results для генерации отчёта"; exit 1
+          $artifactDirs = Get-ChildItem -Directory "$env:GITHUB_WORKSPACE\merged" -Filter allure-results-*
+          $inputDirs = $artifactDirs.FullName
+          if (-not $inputDirs) {
+            Write-Error "❌ Не найдены папки allure-results-*"; exit 1
           }
           & $allureCmd generate $inputDirs -o build/reports/allure-report
       - name: 🚀 Deploy to GitHub Pages
