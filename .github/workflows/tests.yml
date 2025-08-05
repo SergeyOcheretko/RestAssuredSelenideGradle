@@ -155,7 +155,7 @@ jobs:
             const job = data.jobs.find(j => j.name === jobName);
             core.setOutput('id', job.id);
 
-      - - name: 🧾 Inject executor.json (чистый)
+      - name: 🧾 Inject executor.json (чистый)
           shell: pwsh
           run: |
             $jobId = "${{ steps.job.outputs.id }}"
