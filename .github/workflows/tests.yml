@@ -198,14 +198,16 @@ jobs:
         shell: pwsh
         run: |
           $allureBin = "$env:GITHUB_WORKSPACE\allure\bin\allure.bat"
-          $inputDirs = Get-ChildItem -Directory "$env:GITHUB_WORKSPACE\merged" -Filter allure-results-* -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName
+
+          # Скачаные папки лежат в «merged»
+          $inputDirs = Get-ChildItem -Directory "$env:GITHUB_WORKSPACE\merged" -Filter allure-results-* |
+                       Select-Object -ExpandProperty FullName
 
           if (-not $inputDirs) {
-            Write-Error "❌ No allure-results-* folders found in $env:GITHUB_WORKSPACE\merged"
-            exit 1
+            Write-Error "❌ Нет папок allure-results-* в $env:GITHUB_WORKSPACE\merged"; exit 1
           }
 
-          Write-Host "✅ Found folders: $inputDirs"
+          Write-Host "✅ Найдены папки: $inputDirs"
           & $allureBin generate $inputDirs -o build/reports/allure-report --clean
 
       - name: 🚀 Deploy to GitHub Pages
