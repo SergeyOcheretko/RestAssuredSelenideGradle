@@ -177,16 +177,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: 🧹 Clean previous report
-        shell: pwsh
-        run: Remove-Item -Recurse -Force build/reports/allure-report -ErrorAction SilentlyContinue
-
       - name: 📦 Download results
         uses: actions/download-artifact@v4
         with:
           pattern: allure-results-*
-          path: merged
-          merge-multiple: true
+          path: downloaded
+          merge-multiple: false
 
       - name: 📦 Download CLI
         uses: actions/download-artifact@v4
@@ -198,16 +194,12 @@ jobs:
         shell: pwsh
         run: |
           $allureBin = "$env:GITHUB_WORKSPACE\allure\bin\allure.bat"
-
-          # Скачаные папки лежат в «merged»
-          $inputDirs = Get-ChildItem -Directory "$env:GITHUB_WORKSPACE\merged" -Filter allure-results-* |
-                       Select-Object -ExpandProperty FullName
-
+          $inputDirs = Get-ChildItem -Directory "$env:GITHUB_WORKSPACE\downloaded" | Select-Object -ExpandProperty FullName
           if (-not $inputDirs) {
-            Write-Error "❌ Нет папок allure-results-* в $env:GITHUB_WORKSPACE\merged"; exit 1
+            Write-Error "❌ Нет папок allure-results-* в $env:GITHUB_WORKSPACE\downloaded"
+            exit 1
           }
-
-          Write-Host "✅ Найдены папки: $inputDirs"
+          Write-Host "✅ Генерируем из: $inputDirs"
           & $allureBin generate $inputDirs -o build/reports/allure-report --clean
 
       - name: 🚀 Deploy to GitHub Pages
