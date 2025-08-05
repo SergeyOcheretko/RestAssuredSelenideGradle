@@ -50,6 +50,7 @@ tasks.register("uiTestChrome", Test) {
     useJUnitPlatform {
         includeTags "ui"
     }
+    exclude '**/ApiRunner.class'
     systemProperty "browser", "chrome"
     systemProperty "allure.results.directory", "$buildDir/allure-results-chrome"
     outputs.upToDateWhen { false }
@@ -71,6 +72,7 @@ tasks.register("uiTestChrome", Test) {
     }
 }
 
+
 // ---------- UI TEST: Firefox ----------
 tasks.register("uiTestFirefox", Test) {
     description = "Run UI tests on Firefox"
@@ -78,6 +80,7 @@ tasks.register("uiTestFirefox", Test) {
     useJUnitPlatform {
         includeTags "ui"
     }
+    exclude '**/ApiRunner.class'
     systemProperty "browser", "firefox"
     systemProperty "allure.results.directory", "$buildDir/allure-results-firefox"
     outputs.upToDateWhen { false }
@@ -99,13 +102,13 @@ tasks.register("uiTestFirefox", Test) {
     }
 }
 
-// ---------- API TEST ----------
 tasks.register("apiTestRun", Test) {
     description = "Run API tests"
     group = "verification"
     useJUnitPlatform {
         includeTags "api"
     }
+    exclude '**/UiRunner.class' // 🔒 важно для изоляции UI
     systemProperty "allure.results.directory", "$buildDir/allure-results-api"
     outputs.upToDateWhen { false }
     doFirst {
@@ -125,6 +128,7 @@ tasks.register("apiTestRun", Test) {
         }
     }
 }
+
 
 // ---------- Combined Task ----------
 tasks.register("uiTest") {
