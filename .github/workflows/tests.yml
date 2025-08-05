@@ -24,6 +24,7 @@ jobs:
         with:
           name: allure-cli
           path: allure
+          retention-days: 7
 
   ui-tests:
     runs-on: windows-latest
@@ -98,15 +99,12 @@ jobs:
           "@
           $json | Out-File -FilePath build/allure-results/executor.json -Encoding utf8 -NoNewline
 
-      - name: 📖 View executor.json
-        shell: pwsh
-        run: Get-Content build/allure-results/executor.json
-
       - name: 📦 Upload UI results
         uses: actions/upload-artifact@v4
         with:
           name: allure-results-${{ matrix.browser }}
           path: build/allure-results
+          retention-days: 7
 
   api-tests:
     runs-on: windows-latest
@@ -175,15 +173,12 @@ jobs:
           "@
           $json | Out-File -FilePath build/allure-results/executor.json -Encoding utf8 -NoNewline
 
-      - name: 📖 View executor.json
-        shell: pwsh
-        run: Get-Content build/allure-results/executor.json
-
       - name: 📦 Upload API results
         uses: actions/upload-artifact@v4
         with:
           name: allure-results-api
           path: build/allure-results
+          retention-days: 7
 
   deploy-report:
     runs-on: windows-latest
@@ -220,8 +215,20 @@ jobs:
           Write-Host "✅ Генерируем из: $inputDirs"
           & $allureBin generate $inputDirs -o build/reports/allure-report --clean
 
+      - name: 💾 Upload merged Allure Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: merged-allure-report
+          path: build/reports/allure-report
+          retention-days: 7
+
       - name: 🚀 Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           personal_token: ${{ secrets.GH_PAGES_TOKEN }}
           publish_dir: build/reports/allure-report
+
+      - name: 🔗 Echo report link
+        run: |
+          echo "✅ Allure report available at: https://${{ github.repository_owner }}.github.io/${{ github.repository }}"
+

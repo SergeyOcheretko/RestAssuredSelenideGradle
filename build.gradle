@@ -16,14 +16,12 @@ java {
 }
 
 dependencies {
-    // JUnit Jupiter
+    // JUnit
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.2'
-
-    // JUnit Platform Suite API (для @Suite и подобных аннотаций)
     testImplementation 'org.junit.platform:junit-platform-suite:1.10.0'
 
-    // Test tools
+    // Тестовые библиотеки
     testImplementation 'com.codeborne:selenide:6.19.1'
     testImplementation 'io.rest-assured:rest-assured:5.3.2'
     testImplementation 'com.github.javafaker:javafaker:1.0.2'
@@ -33,6 +31,7 @@ dependencies {
     testImplementation 'com.fasterxml.jackson.core:jackson-databind:2.17.1'
     testImplementation 'org.assertj:assertj-core:3.26.0'
     testImplementation 'io.github.bonigarcia:webdrivermanager:5.9.2'
+
     // Allure
     testImplementation 'io.qameta.allure:allure-junit5:2.25.0'
 }
@@ -44,64 +43,82 @@ allure {
     }
 }
 
-tasks.withType(Test).configureEach {
-    useJUnitPlatform()
-    testLogging {
-        events "passed", "failed", "skipped"
-        exceptionFormat "short"
-    }
-    systemProperty "selenide.logging", "false"
-    outputs.upToDateWhen { false }
-    // Исключаем Suite Runners из всех прогонов через Gradle
-    exclude '**/ApiRunner.class'
-    exclude '**/UiRunner.class'
-    // Поддержка запуска по тегам через -DincludeTags и -DexcludeTags
-    doFirst {
-        def includeProp = System.getProperty("includeTags")
-        if (includeProp) {
-            useJUnitPlatform {
-                includeTags(*(includeProp.split(",") as String[]))
-            }
-        }
-        def excludeProp = System.getProperty("excludeTags")
-        if (excludeProp) {
-            useJUnitPlatform {
-                excludeTags(*(excludeProp.split(",") as String[]))
-            }
-        }
-    }
-}
-
-// Кастомные таски для прогонов по тегам
-tasks.register("uiTest", Test) {
-    description = "Run only UI-tagged tests"
+tasks.register("uiTestChrome", Test) {
+    description = "Run UI tests on Chrome"
     group = "verification"
     useJUnitPlatform {
         includeTags "ui"
     }
-    exclude '**/UiRunner.class'
-    exclude '**/ApiRunner.class'
+    systemProperty "browser", "chrome"
+    systemProperty "allure.results.directory", "$buildDir/allure-results-chrome"
+    outputs.upToDateWhen { false }
+    doFirst {
+        copy {
+            from 'src/test/resources/categories.json'
+            into "$buildDir/allure-results-chrome"
+        }
+        copy {
+            from 'src/test/resources/executor-chrome.json'
+            into "$buildDir/allure-results-chrome"
+            rename('executor-chrome.json', 'executor.json')
+        }
+    }
 }
 
-tasks.register("apiTest", Test) {
-    description = "Run only API-tagged tests"
+tasks.register("uiTestFirefox", Test) {
+    description = "Run UI tests on Firefox"
+    group = "verification"
+    useJUnitPlatform {
+        includeTags "ui"
+    }
+    systemProperty "browser", "firefox"
+    systemProperty "allure.results.directory", "$buildDir/allure-results-firefox"
+    outputs.upToDateWhen { false }
+    doFirst {
+        copy {
+            from 'src/test/resources/categories.json'
+            into "$buildDir/allure-results-firefox"
+        }
+        copy {
+            from 'src/test/resources/executor-firefox.json'
+            into "$buildDir/allure-results-firefox"
+            rename('executor-firefox.json', 'executor.json')
+        }
+    }
+}
+
+tasks.register("apiTestRun", Test) {
+    description = "Run API tests"
     group = "verification"
     useJUnitPlatform {
         includeTags "api"
     }
-    exclude '**/UiRunner.class'
-    exclude '**/ApiRunner.class'
-}
-tasks.withType(Test).configureEach {
-    maxParallelForks = 1
+    systemProperty "allure.results.directory", "$buildDir/allure-results-api"
+    outputs.upToDateWhen { false }
     doFirst {
         copy {
             from 'src/test/resources/categories.json'
-            into "$buildDir/allure-results"
+            into "$buildDir/allure-results-api"
+        }
+        copy {
+            from 'src/test/resources/executor-api.json'
+            into "$buildDir/allure-results-api"
+            rename('executor-api.json', 'executor.json')
         }
     }
 }
-tasks.named("allureReport") {
-    dependsOn("uiTest", "apiTest")
+
+tasks.register("generateMergedAllureReport") {
+    dependsOn("uiTestChrome", "uiTestFirefox", "apiTestRun")
+    doLast {
+        exec {
+            commandLine 'allure', 'generate',
+                    "$buildDir/allure-results-chrome",
+                    "$buildDir/allure-results-firefox",
+                    "$buildDir/allure-results-api",
+                    '-o', "$buildDir/allure-report",
+                    '--clean'
+        }
+    }
 }
 
