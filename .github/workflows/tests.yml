@@ -18,6 +18,7 @@ jobs:
           Expand-Archive allure.zip -DestinationPath allure
           Move-Item allure/allure-$version/* allure/ -Force
           Remove-Item allure/allure-$version -Recurse -Force
+
       - name: 📤 Upload Allure CLI
         uses: actions/upload-artifact@v4
         with:
@@ -86,14 +87,13 @@ jobs:
         shell: pwsh
         run: |
           $buildUrl = "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}/jobs/${{ steps.job.outputs.id }}"
-          $json = @{
+          @{
             name       = "UI-${{ matrix.browser }}"
             type       = "GitHub Actions"
             buildUrl   = $buildUrl
             buildOrder = if ("${{ matrix.browser }}" -eq "chrome") { 1 } else { 2 }
             status     = "passed"
-          }
-          $json | ConvertTo-Json -Depth 3 | Out-File -FilePath build/allure-results/executor.json -Encoding utf8 -NoNewline
+          } | ConvertTo-Json -Depth 3 | Out-File -FilePath build/allure-results/executor.json -Encoding utf8 -NoNewline
 
       - name: 📦 Upload UI results
         uses: actions/upload-artifact@v4
@@ -157,14 +157,13 @@ jobs:
         shell: pwsh
         run: |
           $buildUrl = "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}/jobs/${{ steps.job.outputs.id }}"
-          $json = @{
+          @{
             name       = "API"
             type       = "GitHub Actions"
             buildUrl   = $buildUrl
             buildOrder = 3
             status     = "passed"
-          }
-          $json | ConvertTo-Json -Depth 3 | Out-File -FilePath build/allure-results/executor.json -Encoding utf8 -NoNewline
+          } | ConvertTo-Json -Depth 3 | Out-File -FilePath build/allure-results/executor.json -Encoding utf8 -NoNewline
 
       - name: 📦 Upload API results
         uses: actions/upload-artifact@v4
@@ -184,7 +183,7 @@ jobs:
       - name: 📦 Download results
         uses: actions/download-artifact@v4
         with:
-          pattern: allure-results-*"
+          pattern: allure-results-*
           path: merged/allure-results
       - name: 📦 Download CLI
         uses: actions/download-artifact@v4
