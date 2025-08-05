@@ -86,13 +86,14 @@ jobs:
         shell: pwsh
         run: |
           $buildUrl = "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}/jobs/${{ steps.job.outputs.id }}"
-          @{
+          $json = @{
             name       = "UI-${{ matrix.browser }}"
             type       = "GitHub Actions"
             buildUrl   = $buildUrl
             buildOrder = if ("${{ matrix.browser }}" -eq "chrome") { 1 } else { 2 }
             status     = "passed"
-          } | ConvertTo-Json -Depth 3 | Out-File -FilePath build/allure-results/executor.json -Encoding utf8 -NoNewline
+          }
+          $json | ConvertTo-Json -Depth 3 | Out-File -FilePath build/allure-results/executor.json -Encoding utf8 -NoNewline
 
       - name: 📦 Upload UI results
         uses: actions/upload-artifact@v4
@@ -156,13 +157,14 @@ jobs:
         shell: pwsh
         run: |
           $buildUrl = "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}/jobs/${{ steps.job.outputs.id }}"
-          @{
+          $json = @{
             name       = "API"
             type       = "GitHub Actions"
             buildUrl   = $buildUrl
             buildOrder = 3
             status     = "passed"
-          } | ConvertTo-Json -Depth 3 | Out-File -FilePath build/allure-results/executor.json -Encoding utf8 -NoNewline
+          }
+          $json | ConvertTo-Json -Depth 3 | Out-File -FilePath build/allure-results/executor.json -Encoding utf8 -NoNewline
 
       - name: 📦 Upload API results
         uses: actions/upload-artifact@v4
