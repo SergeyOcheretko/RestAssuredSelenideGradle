@@ -176,31 +176,37 @@ jobs:
     needs: [ prepare-allure-cli, ui-tests, api-tests ]
     steps:
       - uses: actions/checkout@v4
+
       - name: 🧹 Force-clean previous report
         shell: pwsh
-        run: Remove-Item -Recurse -Force build/reports/allure-report -ErrorAction SilentlyContinue
+        run: |
+          Remove-Item -Recurse -Force build/reports/allure-report -ErrorAction SilentlyContinue
+
       - name: 📦 Download results
         uses: actions/download-artifact@v4
         with:
           pattern: allure-results-*
           path: merged
           merge-multiple: true
+
       - name: 📦 Download CLI
         uses: actions/download-artifact@v4
         with:
           name: allure-cli
           path: allure
+
       - name: 🔗 Generate report
         shell: pwsh
         run: |
-          $cliBin = "$env:GITHUB_WORKSPACE\allure\bin"
-          $allureCmd = Join-Path $cliBin "allure.bat"
-          $artifactDirs = Get-ChildItem -Directory "$env:GITHUB_WORKSPACE\merged" -Filter allure-results-*
-          $inputDirs = $artifactDirs.FullName
+          $allureBin = "$env:GITHUB_WORKSPACE\allure\bin\allure.bat"
+          $inputDirs = Get-ChildItem -Directory "$env:GITHUB_WORKSPACE\merged" -Filter allure-results-* | Select-Object -ExpandProperty FullName
           if (-not $inputDirs) {
-            Write-Error "❌ Не найдены папки allure-results-*"; exit 1
+            Write-Error "❌ Не найдены папки allure-results-* в $env:GITHUB_WORKSPACE\merged"
+            exit 1
           }
-          & $allureCmd generate $inputDirs -o build/reports/allure-report
+          Write-Host "✅ Найдены папки: $inputDirs"
+          & $allureBin generate $inputDirs -o build/reports/allure-report --clean
+
       - name: 🚀 Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
