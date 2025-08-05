@@ -92,7 +92,7 @@ jobs:
             buildUrl   = $buildUrl
             buildOrder = if ("${{ matrix.browser }}" -eq "chrome") { 1 } else { 2 }
             status     = "passed"
-          } | ConvertTo-Json -Depth 3 | Out-File -FilePath build/allure-results/executor.json -Encoding utf8 -NoNewline
+          } | ConvertTo-Json -Depth 3 -Compress | Out-File -FilePath build/allure-results/executor.json -Encoding utf8 -NoNewline
 
       - name: 📦 Upload UI results
         uses: actions/upload-artifact@v4
@@ -162,7 +162,7 @@ jobs:
             buildUrl   = $buildUrl
             buildOrder = 3
             status     = "passed"
-          } | ConvertTo-Json -Depth 3 | Out-File -FilePath build/allure-results/executor.json -Encoding utf8 -NoNewline
+          } | ConvertTo-Json -Depth 3 -Compress | Out-File -FilePath build/allure-results/executor.json -Encoding utf8 -NoNewline
 
       - name: 📦 Upload API results
         uses: actions/upload-artifact@v4
