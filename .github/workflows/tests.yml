@@ -177,10 +177,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: 🧹 Force-clean previous report
+      - name: 🧹 Clean previous report
         shell: pwsh
-        run: |
-          Remove-Item -Recurse -Force build/reports/allure-report -ErrorAction SilentlyContinue
+        run: Remove-Item -Recurse -Force build/reports/allure-report -ErrorAction SilentlyContinue
 
       - name: 📦 Download results
         uses: actions/download-artifact@v4
@@ -199,12 +198,14 @@ jobs:
         shell: pwsh
         run: |
           $allureBin = "$env:GITHUB_WORKSPACE\allure\bin\allure.bat"
-          $inputDirs = Get-ChildItem -Directory "$env:GITHUB_WORKSPACE\merged" -Filter allure-results-* | Select-Object -ExpandProperty FullName
+          $inputDirs = Get-ChildItem -Directory "$env:GITHUB_WORKSPACE\merged" -Filter allure-results-* -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName
+
           if (-not $inputDirs) {
-            Write-Error "❌ Не найдены папки allure-results-* в $env:GITHUB_WORKSPACE\merged"
+            Write-Error "❌ No allure-results-* folders found in $env:GITHUB_WORKSPACE\merged"
             exit 1
           }
-          Write-Host "✅ Найдены папки: $inputDirs"
+
+          Write-Host "✅ Found folders: $inputDirs"
           & $allureBin generate $inputDirs -o build/reports/allure-report --clean
 
       - name: 🚀 Deploy to GitHub Pages
