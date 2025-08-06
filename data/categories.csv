@@ -1,0 +1,8 @@
+"Category","FAILED","BROKEN","PASSED","SKIPPED","UNKNOWN"
+"Empty Request","1","0","0","0","0"
+"Validation Error","1","0","0","0","0"
+"Duplicate Data","1","0","0","0","0"
+"Note Access Violation","1","0","0","0","0"
+"Authorization Failure","1","0","0","0","0"
+"Content-Type Mismatch","1","0","0","0","0"
+"UI Assertion Mismatch","1","0","0","0","0"
