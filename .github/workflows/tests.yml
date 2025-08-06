@@ -175,12 +175,6 @@ jobs:
           }
           $folders | ForEach-Object { Write-Host "✅ Found: $($_.FullName)" }
 
-      - name: 📥 Download previous history
-        uses: actions/download-artifact@v4
-        with:
-          name: allure-history
-          path: previous-history
-
       - name: ♻️ Inject history into results
         shell: pwsh
         run: |
