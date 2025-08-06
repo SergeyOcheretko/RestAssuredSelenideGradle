@@ -152,6 +152,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: 📥 Download previous history
+        uses: actions/download-artifact@v4
+        with:
+          name: allure-history
+          path: previous-history
+
       - name: 📦 Download results
         uses: actions/download-artifact@v4
         with:
@@ -195,6 +201,7 @@ jobs:
           $allureBin = "$env:GITHUB_WORKSPACE\allure\bin\allure.bat"
           $inputDirs = Get-ChildItem -Directory "$env:GITHUB_WORKSPACE\results" -Filter allure-results-* | Select-Object -ExpandProperty FullName
           & $allureBin generate $inputDirs -o build/reports/allure-report --clean
+
       - name: 💾 Save current history
         shell: pwsh
         run: |
@@ -229,3 +236,4 @@ jobs:
           $repo = "${{ github.repository }}"
           $owner = "${{ github.repository_owner }}"
           Write-Host "✅ Allure report available at: https://$owner.github.io/$repo"
+
