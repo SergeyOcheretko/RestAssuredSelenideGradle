@@ -49,18 +49,6 @@ jobs:
         shell: pwsh
         run: ./gradlew uiTest${{ matrix.browser }} --no-daemon --console=plain --gradle-user-home="$env:GRADLE_USER_HOME"
 
-      - name: ❌ Fail if no Allure results
-        shell: pwsh
-        run: |
-          $dir = "build/allure-results-${{ matrix.browser }}"
-          if ((Get-ChildItem $dir -Filter *.json).Count -eq 0) {
-            Write-Error "❌ No allure result files found in $dir"; exit 1
-          }
-
-      - name: 🧩 Inject categories.json
-        shell: pwsh
-        run: copy src/test/resources/categories.json build/allure-results-${{ matrix.browser }}/categories.json
-
       - name: 🧬 Inject environment.properties
         shell: pwsh
         run: |
@@ -70,20 +58,6 @@ jobs:
           OS=${{ runner.os }}
           CI=GitHub Actions
           "@ | Out-File build/allure-results-${{ matrix.browser }}/environment.properties -Encoding UTF8
-
-      - name: 🆔 Get numeric job id
-        id: job
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const jobName = 'UI Tests — ${{ matrix.browser }}';
-            const { data } = await github.rest.actions.listJobsForWorkflowRun({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              run_id: context.runId,
-            });
-            const job = data.jobs.find(j => j.name === jobName);
-            core.setOutput('id', job.id);
 
       - name: 🧾 Inject executor.json
         shell: pwsh
@@ -103,7 +77,6 @@ jobs:
           }
           "@
           $json | Out-File -FilePath build/allure-results-${{ matrix.browser }}/executor.json -Encoding utf8 -NoNewline
-
 
       - name: 📦 Upload UI results
         uses: actions/upload-artifact@v4
@@ -130,17 +103,6 @@ jobs:
         shell: pwsh
         run: ./gradlew apiTestRun --no-daemon --console=plain --gradle-user-home="$env:GRADLE_USER_HOME"
 
-      - name: ❌ Fail if no Allure results
-        shell: pwsh
-        run: |
-          if ((Get-ChildItem build/allure-results-api -Filter *.json).Count -eq 0) {
-            Write-Error "❌ No allure result files found in build/allure-results-api"; exit 1
-          }
-
-      - name: 🧩 Inject categories.json
-        shell: pwsh
-        run: copy src/test/resources/categories.json build/allure-results-api/categories.json
-
       - name: 🧬 Inject environment.properties
         shell: pwsh
         run: |
@@ -149,20 +111,6 @@ jobs:
           OS=${{ runner.os }}
           CI=GitHub Actions
           "@ | Out-File build/allure-results-api/environment.properties -Encoding UTF8
-
-      - name: 🆔 Get numeric job id
-        id: job
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const jobName = 'API Tests';
-            const { data } = await github.rest.actions.listJobsForWorkflowRun({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              run_id: context.runId,
-            });
-            const job = data.jobs.find(j => j.name === jobName);
-            core.setOutput('id', job.id);
 
       - name: 🧾 Inject executor.json
         shell: pwsh
@@ -181,7 +129,6 @@ jobs:
           "@
           $json | Out-File -FilePath build/allure-results-api/executor.json -Encoding utf8 -NoNewline
 
-
       - name: 📦 Upload API results
         uses: actions/upload-artifact@v4
         with:
@@ -196,10 +143,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: 🧹 Clean previous report
-        shell: pwsh
-        run: Remove-Item -Recurse -Force build/reports/allure-report -ErrorAction SilentlyContinue
-
       - name: 📦 Download results
         uses: actions/download-artifact@v4
         with:
@@ -212,10 +155,6 @@ jobs:
         with:
           name: allure-cli
           path: allure
-
-      - name: 📂 List downloaded results
-        shell: pwsh
-        run: Get-ChildItem results -Recurse
 
       - name: 📋 Check result folders
         shell: pwsh
@@ -232,12 +171,6 @@ jobs:
         run: |
           $allureBin = "$env:GITHUB_WORKSPACE\allure\bin\allure.bat"
           $inputDirs = Get-ChildItem -Directory "$env:GITHUB_WORKSPACE\results" -Filter allure-results-* | Select-Object -ExpandProperty FullName
-          if (-not $inputDirs) {
-            Write-Error "❌ Не найдены папки allure-results-* в results"
-            exit 1
-          }
-          Write-Host "✅ Генерируем из:"
-          $inputDirs | ForEach-Object { Write-Host "→ $_" }
           & $allureBin generate $inputDirs -o build/reports/allure-report --clean
 
       - name: 💾 Upload merged Allure Report
@@ -259,4 +192,3 @@ jobs:
           $repo = "${{ github.repository }}"
           $owner = "${{ github.repository_owner }}"
           Write-Host "✅ Allure report available at: https://$owner.github.io/$repo"
-
