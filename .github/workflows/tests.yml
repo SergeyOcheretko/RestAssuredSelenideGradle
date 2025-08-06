@@ -185,15 +185,23 @@ jobs:
         shell: pwsh
         run: |
           $historyPath = "$env:GITHUB_WORKSPACE\previous-history"
+          $resultsPath = "$env:GITHUB_WORKSPACE\results"
+
           if (Test-Path $historyPath) {
-            Get-ChildItem -Directory "$env:GITHUB_WORKSPACE\results" | ForEach-Object {
-              $target = "$($_.FullName)\history"
-              Copy-Item -Path "$historyPath\*" -Destination $target -Recurse -Force
-              Write-Host "✅ Injected history into: $($_.FullName)"
+            $historyFiles = Get-ChildItem -Path $historyPath
+            if ($historyFiles.Count -eq 0) {
+              Write-Host "⚠️ History folder exists but is empty — skipping injection"
+            } else {
+              Get-ChildItem -Directory $resultsPath | ForEach-Object {
+                $target = "$($_.FullName)\history"
+                Copy-Item -Path "$historyPath\*" -Destination $target -Recurse -Force
+                Write-Host "✅ Injected history into: $($_.FullName)"
+              }
             }
           } else {
-            Write-Host "⚠️ No previous history found — skipping injection"
+            Write-Host "⚠️ No previous history folder found — skipping injection"
           }
+
 
       - name: 🔗 Generate report
         shell: pwsh
