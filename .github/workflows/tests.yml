@@ -89,12 +89,17 @@ jobs:
         shell: pwsh
         run: |
           $jobId = "${{ steps.job.outputs.id }}"
+          $reportUrl = "https://${{ github.repository_owner }}.github.io/${{ github.repository }}"
+          $buildName = "UI-${{ matrix.browser }} Tests"
+          $buildOrder = $(if ("${{ matrix.browser }}" -eq 'chrome') {1} else {2})
           $json = @"
           {
             "name": "UI-${{ matrix.browser }}",
-            "type": "GitHub Actions",
+            "type": "github",
             "buildUrl": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}/jobs/$jobId",
-            "buildOrder": $(if ("${{ matrix.browser }}" -eq 'chrome') {1} else {2}),
+            "buildOrder": $buildOrder,
+            "buildName": "$buildName",
+            "reportUrl": "$reportUrl",
             "status": "passed"
           }
           "@
@@ -163,12 +168,15 @@ jobs:
         shell: pwsh
         run: |
           $jobId = "${{ steps.job.outputs.id }}"
+          $reportUrl = "https://${{ github.repository_owner }}.github.io/${{ github.repository }}"
           $json = @"
           {
             "name": "API",
-            "type": "GitHub Actions",
+            "type": "github",
             "buildUrl": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}/jobs/$jobId",
             "buildOrder": 3,
+            "buildName": "API Tests",
+            "reportUrl": "$reportUrl",
             "status": "passed"
           }
           "@
@@ -217,7 +225,8 @@ jobs:
           if (-not $inputDirs) {
             Write-Error "❌ Не найдены папки allure-results-* в results"; exit 1
           }
-          Write-Host "✅ Генерируем из: $inputDirs"
+          Write-Host "✅ Генерируем из:"
+          $inputDirs | ForEach-Object { Write-Host "→ $_" }
           & $allureBin generate $inputDirs -o build/reports/allure-report --clean
 
       - name: 💾 Upload merged Allure Report
