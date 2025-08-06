@@ -47,18 +47,19 @@ jobs:
 
       - name: 🧪 Run UI tests
         shell: pwsh
-        run: ./gradlew uiTest --no-daemon --console=plain --gradle-user-home="$env:GRADLE_USER_HOME"
+        run: ./gradlew uiTest${{ matrix.browser }} --no-daemon --console=plain --gradle-user-home="$env:GRADLE_USER_HOME"
 
       - name: ❌ Fail if no Allure results
         shell: pwsh
         run: |
-          if ((Get-ChildItem build/allure-results -Filter *.json).Count -eq 0) {
-            Write-Error "❌ No allure result files found"; exit 1
+          $dir = "build/allure-results-${{ matrix.browser }}"
+          if ((Get-ChildItem $dir -Filter *.json).Count -eq 0) {
+            Write-Error "❌ No allure result files found in $dir"; exit 1
           }
 
       - name: 🧩 Inject categories.json
         shell: pwsh
-        run: copy src/test/resources/categories.json build/allure-results/categories.json
+        run: copy src/test/resources/categories.json build/allure-results-${{ matrix.browser }}/categories.json
 
       - name: 🧬 Inject environment.properties
         shell: pwsh
@@ -68,7 +69,7 @@ jobs:
           Job=UI-${{ matrix.browser }}
           OS=${{ runner.os }}
           CI=GitHub Actions
-          "@ | Out-File build/allure-results/environment.properties -Encoding UTF8
+          "@ | Out-File build/allure-results-${{ matrix.browser }}/environment.properties -Encoding UTF8
 
       - name: 🆔 Get numeric job id
         id: job
@@ -97,13 +98,13 @@ jobs:
             "status": "passed"
           }
           "@
-          $json | Out-File -FilePath build/allure-results/executor.json -Encoding utf8 -NoNewline
+          $json | Out-File -FilePath build/allure-results-${{ matrix.browser }}/executor.json -Encoding utf8 -NoNewline
 
       - name: 📦 Upload UI results
         uses: actions/upload-artifact@v4
         with:
           name: allure-results-${{ matrix.browser }}
-          path: build/allure-results
+          path: build/allure-results-${{ matrix.browser }}
           retention-days: 7
 
   api-tests:
@@ -122,18 +123,18 @@ jobs:
 
       - name: 🧪 Run API tests
         shell: pwsh
-        run: ./gradlew apiTest --no-daemon --console=plain --gradle-user-home="$env:GRADLE_USER_HOME"
+        run: ./gradlew apiTestRun --no-daemon --console=plain --gradle-user-home="$env:GRADLE_USER_HOME"
 
       - name: ❌ Fail if no Allure results
         shell: pwsh
         run: |
-          if ((Get-ChildItem build/allure-results -Filter *.json).Count -eq 0) {
-            Write-Error "❌ No allure result files found"; exit 1
+          if ((Get-ChildItem build/allure-results-api -Filter *.json).Count -eq 0) {
+            Write-Error "❌ No allure result files found in build/allure-results-api"; exit 1
           }
 
       - name: 🧩 Inject categories.json
         shell: pwsh
-        run: copy src/test/resources/categories.json build/allure-results/categories.json
+        run: copy src/test/resources/categories.json build/allure-results-api/categories.json
 
       - name: 🧬 Inject environment.properties
         shell: pwsh
@@ -142,7 +143,7 @@ jobs:
           Job=API
           OS=${{ runner.os }}
           CI=GitHub Actions
-          "@ | Out-File build/allure-results/environment.properties -Encoding UTF8
+          "@ | Out-File build/allure-results-api/environment.properties -Encoding UTF8
 
       - name: 🆔 Get numeric job id
         id: job
@@ -171,13 +172,13 @@ jobs:
             "status": "passed"
           }
           "@
-          $json | Out-File -FilePath build/allure-results/executor.json -Encoding utf8 -NoNewline
+          $json | Out-File -FilePath build/allure-results-api/executor.json -Encoding utf8 -NoNewline
 
       - name: 📦 Upload API results
         uses: actions/upload-artifact@v4
         with:
           name: allure-results-api
-          path: build/allure-results
+          path: build/allure-results-api
           retention-days: 7
 
   deploy-report:
@@ -204,6 +205,10 @@ jobs:
           name: allure-cli
           path: allure
 
+      - name: 📂 List downloaded results
+        shell: pwsh
+        run: Get-ChildItem results -Recurse
+
       - name: 🔗 Generate report
         shell: pwsh
         run: |
@@ -229,6 +234,8 @@ jobs:
           publish_dir: build/reports/allure-report
 
       - name: 🔗 Echo report link
+        shell: pwsh
         run: |
-          echo "✅ Allure report available at: https://${{ github.repository_owner }}.github.io/${{ github.repository }}"
-
+          $repo = "${{ github.repository }}"
+          $owner = "${{ github.repository_owner }}"
+          Write-Host "✅ Allure report available at: https://$owner.github.io/$repo"
