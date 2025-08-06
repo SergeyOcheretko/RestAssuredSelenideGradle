@@ -88,7 +88,6 @@ jobs:
       - name: 🧾 Inject executor.json
         shell: pwsh
         run: |
-          $jobId = "${{ steps.job.outputs.id }}"
           $reportUrl = "https://${{ github.repository_owner }}.github.io/${{ github.repository }}"
           $buildName = "UI-${{ matrix.browser }} Tests"
           $buildOrder = $(if ("${{ matrix.browser }}" -eq 'chrome') {1} else {2})
@@ -96,7 +95,7 @@ jobs:
           {
             "name": "UI-${{ matrix.browser }}",
             "type": "github",
-            "buildUrl": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}/jobs/$jobId",
+            "buildUrl": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}",
             "buildOrder": $buildOrder,
             "buildName": "$buildName",
             "reportUrl": "$reportUrl",
@@ -104,6 +103,7 @@ jobs:
           }
           "@
           $json | Out-File -FilePath build/allure-results-${{ matrix.browser }}/executor.json -Encoding utf8 -NoNewline
+
 
       - name: 📦 Upload UI results
         uses: actions/upload-artifact@v4
@@ -167,13 +167,12 @@ jobs:
       - name: 🧾 Inject executor.json
         shell: pwsh
         run: |
-          $jobId = "${{ steps.job.outputs.id }}"
           $reportUrl = "https://${{ github.repository_owner }}.github.io/${{ github.repository }}"
           $json = @"
           {
             "name": "API",
             "type": "github",
-            "buildUrl": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}/jobs/$jobId",
+            "buildUrl": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}",
             "buildOrder": 3,
             "buildName": "API Tests",
             "reportUrl": "$reportUrl",
@@ -181,6 +180,7 @@ jobs:
           }
           "@
           $json | Out-File -FilePath build/allure-results-api/executor.json -Encoding utf8 -NoNewline
+
 
       - name: 📦 Upload API results
         uses: actions/upload-artifact@v4
