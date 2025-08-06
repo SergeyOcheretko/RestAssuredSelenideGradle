@@ -175,12 +175,46 @@ jobs:
           }
           $folders | ForEach-Object { Write-Host "✅ Found: $($_.FullName)" }
 
+      - name: 📥 Download previous history
+        uses: actions/download-artifact@v4
+        with:
+          name: allure-history
+          path: previous-history
+
+      - name: ♻️ Inject history into results
+        shell: pwsh
+        run: |
+          $historyPath = "$env:GITHUB_WORKSPACE\previous-history"
+          if (Test-Path $historyPath) {
+            Get-ChildItem -Directory "$env:GITHUB_WORKSPACE\results" | ForEach-Object {
+              $target = "$($_.FullName)\history"
+              Copy-Item -Path "$historyPath\*" -Destination $target -Recurse -Force
+              Write-Host "✅ Injected history into: $($_.FullName)"
+            }
+          } else {
+            Write-Host "⚠️ No previous history found — skipping injection"
+          }
+
       - name: 🔗 Generate report
         shell: pwsh
         run: |
           $allureBin = "$env:GITHUB_WORKSPACE\allure\bin\allure.bat"
           $inputDirs = Get-ChildItem -Directory "$env:GITHUB_WORKSPACE\results" -Filter allure-results-* | Select-Object -ExpandProperty FullName
           & $allureBin generate $inputDirs -o build/reports/allure-report --clean
+      - name: 💾 Save current history
+        shell: pwsh
+        run: |
+          $source = "$env:GITHUB_WORKSPACE\build\reports\allure-report\history"
+          if (Test-Path $source) {
+            Copy-Item -Path $source -Destination "$env:GITHUB_WORKSPACE\build\history" -Recurse -Force
+          }
+
+      - name: 📤 Upload history for next run
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-history
+          path: build/history
+          retention-days: 7
 
       - name: 💾 Upload merged Allure Report
         uses: actions/upload-artifact@v4
