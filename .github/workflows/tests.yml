@@ -217,13 +217,24 @@ jobs:
         shell: pwsh
         run: Get-ChildItem results -Recurse
 
+      - name: 📋 Check result folders
+        shell: pwsh
+        run: |
+          $folders = Get-ChildItem -Directory results
+          if ($folders.Count -eq 0) {
+            Write-Error "❌ No allure-results-* folders found in 'results'"
+            exit 1
+          }
+          $folders | ForEach-Object { Write-Host "✅ Found: $($_.FullName)" }
+
       - name: 🔗 Generate report
         shell: pwsh
         run: |
           $allureBin = "$env:GITHUB_WORKSPACE\allure\bin\allure.bat"
           $inputDirs = Get-ChildItem -Directory "$env:GITHUB_WORKSPACE\results" -Filter allure-results-* | Select-Object -ExpandProperty FullName
           if (-not $inputDirs) {
-            Write-Error "❌ Не найдены папки allure-results-* в results"; exit 1
+            Write-Error "❌ Не найдены папки allure-results-* в results"
+            exit 1
           }
           Write-Host "✅ Генерируем из:"
           $inputDirs | ForEach-Object { Write-Host "→ $_" }
@@ -248,3 +259,4 @@ jobs:
           $repo = "${{ github.repository }}"
           $owner = "${{ github.repository_owner }}"
           Write-Host "✅ Allure report available at: https://$owner.github.io/$repo"
+
